@@ -1,0 +1,6 @@
+{
+  "name": "Pulse",
+  "description": "Production-ready healthcare SaaS foundation",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

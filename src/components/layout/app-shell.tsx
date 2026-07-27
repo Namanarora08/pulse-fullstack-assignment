@@ -1,0 +1,16 @@
+import { MobileNavigation } from "@/components/layout/mobile-navigation";
+import { Navbar } from "@/components/layout/navbar";
+
+type AppShellProps = {
+  children: React.ReactNode;
+};
+
+export function AppShell({ children }: AppShellProps) {
+  return (
+    <div className="min-h-screen pb-20 md:pb-0">
+      <Navbar />
+      {children}
+      <MobileNavigation />
+    </div>
+  );
+}

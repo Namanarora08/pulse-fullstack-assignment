@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum QuestionType {
+  YES_NO
+  SCALE
+  NUMERIC
+}
+
+enum QuestionCategory {
+  SYMPTOM
+  ADHERENCE
+}
+
+enum Direction {
+  HIGHER_BETTER
+  HIGHER_WORSE
+}
+
+model Doctor {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patients   Patient[]
+  checklists Checklist[]
+
+  @@map("doctors")
+}
+
+model Patient {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  doctorId String
+  doctor   Doctor @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+
+  checklistId String?
+  checklist   Checklist? @relation(fields: [checklistId], references: [id], onDelete: SetNull)
+
+  dailyCheckIns DailyCheckIn[]
+
+  @@index([doctorId])
+  @@index([checklistId])
+  @@map("patients")
+}
+
+model Checklist {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  doctorId String
+  doctor   Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  questions Question[]
+  patients  Patient[]
+
+  @@index([doctorId])
+  @@map("checklists")
+}
+
+model Question {
+  id     String @id @default(cuid())
+  prompt String
+
+  category  QuestionCategory
+  type      QuestionType
+  weight    Int
+  direction Direction
+
+  order Int @default(0)
+
+  rangeMin Float?
+  rangeMax Float?
+  hardMin  Float?
+  hardMax  Float?
+  unit     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  checklistId String
+  checklist   Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+
+  answers Answer[]
+
+  @@index([checklistId])
+  @@map("questions")
+}
+
+model DailyCheckIn {
+  id String @id @default(cuid())
+
+  date DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  answers Answer[]
+
+  @@unique([patientId, date])
+  @@index([patientId])
+  @@map("daily_check_ins")
+}
+
+model Answer {
+  id String @id @default(cuid())
+
+  boolValue    Boolean?
+  scaleValue   Int?
+  numericValue Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dailyCheckInId String
+  dailyCheckIn   DailyCheckIn @relation(fields: [dailyCheckInId], references: [id], onDelete: Cascade)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
+
+  @@unique([dailyCheckInId, questionId])
+  @@index([dailyCheckInId])
+  @@index([questionId])
+  @@map("answers")
+}
