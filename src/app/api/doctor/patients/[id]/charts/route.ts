@@ -1,105 +1,39 @@
 import { NextRequest } from "next/server";
 
-import { errorResponse, successResponse } from "@/lib/api/responses";
+import {
+  answersWithQuestionInclude,
+  CheckInRow,
+  logAndFail,
+  resolvePatientIdByKeyword,
+  scoreCheckIn,
+  successResponse,
+  toDateKey
+} from "@/lib/api";
 import { prisma } from "@/lib/prisma";
-import { calculateCategoryIndex, calculateDailyScore } from "@/lib/scoring";
+import type { RouteContext } from "@/types/api";
 
 export const dynamic = "force-dynamic";
 
-type RouteProps = {
-  params: Promise<{ id: string }>;
-};
-
-async function resolvePatientId(idParam: string): Promise<string> {
-  const existing = await prisma.patient.findUnique({
-    where: { id: idParam },
-    select: { id: true }
-  });
-  if (existing) return existing.id;
-
-  const keywordMatch = await prisma.patient.findFirst({
-    where: {
-      OR: [
-        { email: { contains: idParam } },
-        { name: { contains: idParam } }
-      ]
-    },
-    select: { id: true }
-  });
-  if (keywordMatch) return keywordMatch.id;
-
-  const first = await prisma.patient.findFirst({ select: { id: true } });
-  return first?.id || idParam;
-}
-
-interface QuestionItem {
-  id: string;
-  category: "SYMPTOM" | "ADHERENCE";
-  type: "YES_NO" | "SCALE" | "NUMERIC";
-  weight: number;
-  direction: "HIGHER_BETTER" | "HIGHER_WORSE";
-  rangeMin: number | null;
-  rangeMax: number | null;
-  hardMin: number | null;
-  hardMax: number | null;
-}
-
-interface AnswerItem {
-  questionId: string;
-  boolValue: boolean | null;
-  scaleValue: number | null;
-  numericValue: number | null;
-  question: QuestionItem;
-}
-
-interface CheckInItem {
-  id: string;
-  date: Date;
-  answers: AnswerItem[];
-}
-
-export async function GET(_request: NextRequest, { params }: RouteProps) {
+export async function GET(
+  _request: NextRequest,
+  { params }: RouteContext<{ id: string }>
+) {
   try {
     const { id } = await params;
-    const patientId = await resolvePatientId(id);
+    const patientId = await resolvePatientIdByKeyword(id);
 
-    const checkIns: CheckInItem[] = await prisma.dailyCheckIn.findMany({
+    const checkIns: CheckInRow[] = await prisma.dailyCheckIn.findMany({
       where: { patientId },
       orderBy: { date: "asc" },
-      include: {
-        answers: {
-          include: { question: true }
-        }
-      }
+      include: answersWithQuestionInclude
     });
 
     if (checkIns.length > 0) {
-      const chartData = checkIns.map((ci: CheckInItem) => {
-        const answersWithQuestions = ci.answers.map((a: AnswerItem) => ({
-          question: {
-            id: a.question.id,
-            category: a.question.category,
-            type: a.question.type,
-            weight: a.question.weight,
-            direction: a.question.direction,
-            rangeMin: a.question.rangeMin,
-            rangeMax: a.question.rangeMax,
-            hardMin: a.question.hardMin,
-            hardMax: a.question.hardMax
-          },
-          answer: {
-            questionId: a.question.id,
-            boolValue: a.boolValue,
-            scaleValue: a.scaleValue,
-            numericValue: a.numericValue,
-            skipped: a.boolValue === null && a.scaleValue === null && a.numericValue === null
-          }
-        }));
-
-        const symptomIndex = calculateCategoryIndex(answersWithQuestions, "SYMPTOM");
-        const adherenceIndex = calculateCategoryIndex(answersWithQuestions, "ADHERENCE");
-        const overallScore = calculateDailyScore(symptomIndex, adherenceIndex);
-        const dateStr = ci.date.toISOString().split("T")[0];
+      const chartData = checkIns.map((checkIn: CheckInRow) => {
+        const { overallScore, symptomIndex, adherenceIndex } = scoreCheckIn(
+          checkIn.answers
+        );
+        const dateStr = toDateKey(checkIn.date);
 
         return {
           date: dateStr,
@@ -127,8 +61,9 @@ export async function GET(_request: NextRequest, { params }: RouteProps) {
 
     return successResponse(fallbackData);
   } catch (error) {
-    console.error("Error fetching patient chart data:", error);
-    return errorResponse("Failed to fetch chart data", { status: 500 });
+    return logAndFail(error, {
+      log: "Error fetching patient chart data",
+      message: "Failed to fetch chart data"
+    });
   }
 }
-

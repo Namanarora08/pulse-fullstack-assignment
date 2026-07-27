@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 
-import { errorResponse, successResponse } from "@/lib/api/responses";
+import {
+  derivePatientProfile,
+  logAndFail,
+  patientKeywordFilter,
+  successResponse
+} from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -21,14 +26,7 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get("q") || "";
 
     const patients: PatientWithCheckIns[] = await prisma.patient.findMany({
-      where: query
-        ? {
-            OR: [
-              { name: { contains: query } },
-              { email: { contains: query } }
-            ]
-          }
-        : {},
+      where: query ? patientKeywordFilter(query) : {},
       include: {
         dailyCheckIns: {
           take: 1,
@@ -40,22 +38,10 @@ export async function GET(request: NextRequest) {
     });
 
     if (patients.length > 0) {
-      const formatted = patients.map((p: PatientWithCheckIns) => {
-        let status = "Stable";
-        let condition = "General Monitoring";
+      const formatted = patients.map((patient: PatientWithCheckIns) => {
+        const { status, condition } = derivePatientProfile(patient);
 
-        if (p.email.includes("deteriorating") || p.name.includes("Mira")) {
-          status = "Watch";
-          condition = "Post-op Care";
-        } else if (p.email.includes("improving") || p.name.includes("Jordan")) {
-          status = "Improving";
-          condition = "Recovery Protocol";
-        } else if (p.name.includes("Avery") || p.email.includes("stable")) {
-          status = "Stable";
-          condition = "Primary Care";
-        }
-
-        const latestCheckIn = p.dailyCheckIns[0];
+        const latestCheckIn = patient.dailyCheckIns[0];
         const checkInsFormatted = latestCheckIn
           ? [
               {
@@ -66,9 +52,9 @@ export async function GET(request: NextRequest) {
           : [];
 
         return {
-          id: p.id,
-          name: p.name,
-          email: p.email,
+          id: patient.id,
+          name: patient.name,
+          email: patient.email,
           status,
           condition,
           checkIns: checkInsFormatted
@@ -108,8 +94,9 @@ export async function GET(request: NextRequest) {
 
     return successResponse(fallbackPatients);
   } catch (error) {
-    console.error("Error fetching patient roster:", error);
-    return errorResponse("Failed to fetch patients", { status: 500 });
+    return logAndFail(error, {
+      log: "Error fetching patient roster",
+      message: "Failed to fetch patients"
+    });
   }
 }
-

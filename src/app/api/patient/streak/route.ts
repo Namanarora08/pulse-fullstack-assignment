@@ -1,34 +1,14 @@
 import { NextRequest } from "next/server";
 
-import { errorResponse, successResponse } from "@/lib/api/responses";
+import {
+  logAndFail,
+  resolveDemoPatientId,
+  successResponse,
+  toDateKey
+} from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
-
-async function resolvePatientId(patientIdParam?: string | null): Promise<string> {
-  if (patientIdParam && patientIdParam !== "demo") {
-    const existing = await prisma.patient.findUnique({
-      where: { id: patientIdParam },
-      select: { id: true }
-    });
-    if (existing) return existing.id;
-  }
-
-  const demoPatient = await prisma.patient.findFirst({
-    where: {
-      OR: [
-        { email: "patient.stable@pulsecare.dev" },
-        { name: { contains: "Avery" } }
-      ]
-    },
-    select: { id: true }
-  });
-
-  if (demoPatient) return demoPatient.id;
-
-  const firstPatient = await prisma.patient.findFirst({ select: { id: true } });
-  return firstPatient?.id || "demo";
-}
 
 interface CheckInItemForStreak {
   id: string;
@@ -39,48 +19,46 @@ interface CheckInItemForStreak {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const rawPatientId = searchParams.get("patientId");
-    const patientId = await resolvePatientId(rawPatientId);
+    const patientId = await resolveDemoPatientId(searchParams.get("patientId"));
 
-    const checkIns: CheckInItemForStreak[] = await prisma.dailyCheckIn.findMany({
-      where: { patientId },
-      select: { id: true, date: true, answers: { select: { id: true } } },
-      orderBy: { date: "desc" }
-    });
+    const checkIns: CheckInItemForStreak[] = await prisma.dailyCheckIn.findMany(
+      {
+        where: { patientId },
+        select: { id: true, date: true, answers: { select: { id: true } } },
+        orderBy: { date: "desc" }
+      }
+    );
 
     // A check-in counts as completed if it has at least one answer recorded
-    const completedCheckIns = checkIns.filter((c: CheckInItemForStreak) => c.answers.length > 0);
+    const completedCheckIns = checkIns.filter(
+      (checkIn: CheckInItemForStreak) => checkIn.answers.length > 0
+    );
 
     let streakCount = 0;
     if (completedCheckIns.length > 0) {
-      const dates = completedCheckIns.map(
-        (c: CheckInItemForStreak) => new Date(c.date).toISOString().split("T")[0]
+      const dates = completedCheckIns.map((checkIn: CheckInItemForStreak) =>
+        toDateKey(checkIn.date)
       );
 
       const uniqueDates: string[] = Array.from(new Set<string>(dates)).sort(
         (a: string, b: string) => (a < b ? 1 : -1)
       );
 
-      const today = new Date().toISOString().split("T")[0];
+      const today = toDateKey(new Date());
       const yesterdayDate = new Date();
       yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-      const yesterday = yesterdayDate.toISOString().split("T")[0];
+      const yesterday = toDateKey(yesterdayDate);
 
       const checkDate = uniqueDates.includes(today)
         ? new Date(today)
         : uniqueDates.includes(yesterday)
-        ? new Date(yesterday)
-        : null;
+          ? new Date(yesterday)
+          : null;
 
       if (checkDate) {
-        while (true) {
-          const formatted = checkDate.toISOString().split("T")[0];
-          if (uniqueDates.includes(formatted)) {
-            streakCount++;
-            checkDate.setDate(checkDate.getDate() - 1);
-          } else {
-            break;
-          }
+        while (uniqueDates.includes(toDateKey(checkDate))) {
+          streakCount++;
+          checkDate.setDate(checkDate.getDate() - 1);
         }
       }
     }
@@ -89,11 +67,14 @@ export async function GET(request: NextRequest) {
       patientId,
       currentStreak: streakCount,
       totalCompleted: completedCheckIns.length,
-      history: completedCheckIns.map((c: CheckInItemForStreak) => c.date)
+      history: completedCheckIns.map(
+        (checkIn: CheckInItemForStreak) => checkIn.date
+      )
     });
   } catch (error) {
-    console.error("Error calculating streak:", error);
-    return errorResponse("Failed to calculate streak", { status: 500 });
+    return logAndFail(error, {
+      log: "Error calculating streak",
+      message: "Failed to calculate streak"
+    });
   }
 }
-

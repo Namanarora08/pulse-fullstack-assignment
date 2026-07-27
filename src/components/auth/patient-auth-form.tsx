@@ -15,15 +15,25 @@ import {
   Pill,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
-  UserCheck,
+  UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AuthCheckbox,
+  AuthErrorBanner,
+  AuthField,
+  AuthFormHeader,
+  AuthFormShell,
+  AuthSubmitButton
+} from "@/components/auth/auth-form-primitives";
 import { useAuth } from "@/components/auth/auth-context";
+
+const DEMO_AADHAAR = "9876 5432 1098";
+const DEMO_DOB = "1988-05-14";
 
 export function PatientAuthForm() {
   const { login } = useAuth();
-  
+
   // Step: 1 = Credentials, 2 = OTP verification, 3 = Simulated data hydration
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [aadhaar, setAadhaar] = useState("");
@@ -33,16 +43,36 @@ export function PatientAuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [forgotModal, setForgotModal] = useState(false);
-  
+
   // Simulated sync steps for Step 3
   const [syncIndex, setSyncIndex] = useState(0);
 
   const syncSteps = [
-    { title: "Verifying Aadhaar Identity", desc: "UIDAI Auth Token validated", icon: ShieldCheck },
-    { title: "Fetching Medical History", desc: "Discharge Summary & Diseases", icon: FileText },
-    { title: "Syncing Care Team", desc: "Assigned Doctor: Dr. Sarah Jenkins", icon: UserCheck },
-    { title: "Loading Prescriptions & Diet", desc: "Active Medications & Meals", icon: Pill },
-    { title: "Hydrating Recovery Status", desc: "14-Day Streak & Daily Score", icon: HeartPulse },
+    {
+      title: "Verifying Aadhaar Identity",
+      desc: "UIDAI Auth Token validated",
+      icon: ShieldCheck
+    },
+    {
+      title: "Fetching Medical History",
+      desc: "Discharge Summary & Diseases",
+      icon: FileText
+    },
+    {
+      title: "Syncing Care Team",
+      desc: "Assigned Doctor: Dr. Sarah Jenkins",
+      icon: UserCheck
+    },
+    {
+      title: "Loading Prescriptions & Diet",
+      desc: "Active Medications & Meals",
+      icon: Pill
+    },
+    {
+      title: "Hydrating Recovery Status",
+      desc: "14-Day Streak & Daily Score",
+      icon: HeartPulse
+    }
   ];
 
   const formatAadhaar = (val: string) => {
@@ -63,38 +93,11 @@ export function PatientAuthForm() {
 
   const handleDemoFill = () => {
     setError("");
-    setAadhaar("9876 5432 1098");
-    setDob("1988-05-14");
+    setAadhaar(DEMO_AADHAAR);
+    setDob(DEMO_DOB);
   };
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    let currentAadhaar = aadhaar;
-    let currentDob = dob;
-
-    if (!currentAadhaar || currentAadhaar.replace(/\s/g, "").length !== 12) {
-      currentAadhaar = "9876 5432 1098";
-      setAadhaar(currentAadhaar);
-    }
-    if (!currentDob) {
-      currentDob = "1988-05-14";
-      setDob(currentDob);
-    }
-
-    const res = await login("patient", { aadhaar: currentAadhaar, dob: currentDob });
-    setLoading(false);
-
-    if (!res.success) {
-      setError(res.error || "Aadhaar verification failed.");
-      return;
-    }
-
-    setStep(3);
-
-    // Animate data sync steps and then route to /patient
+  const runSyncAnimation = (stepDurationMs: number) => {
     let current = 0;
     const interval = setInterval(() => {
       current += 1;
@@ -105,15 +108,17 @@ export function PatientAuthForm() {
           window.location.href = "/patient";
         }, 300);
       }
-    }, 350);
+    }, stepDurationMs);
   };
 
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const authenticate = async (
+    credentials: { aadhaar: string; dob: string },
+    stepDurationMs: number
+  ) => {
     setLoading(true);
     setError("");
 
-    const res = await login("patient", { aadhaar: aadhaar || "9876 5432 1098", dob: dob || "1988-05-14" });
+    const res = await login("patient", credentials);
     setLoading(false);
 
     if (!res.success) {
@@ -122,44 +127,45 @@ export function PatientAuthForm() {
     }
 
     setStep(3);
+    runSyncAnimation(stepDurationMs);
+  };
 
-    // Animate data sync steps and then route to /patient
-    let current2 = 0;
-    const interval2 = setInterval(() => {
-      current2 += 1;
-      setSyncIndex(current2);
-      if (current2 >= syncSteps.length) {
-        clearInterval(interval2);
-        setTimeout(() => {
-          window.location.href = "/patient";
-        }, 300);
-      }
-    }, 400);
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    let currentAadhaar = aadhaar;
+    let currentDob = dob;
+
+    if (!currentAadhaar || currentAadhaar.replace(/\s/g, "").length !== 12) {
+      currentAadhaar = DEMO_AADHAAR;
+      setAadhaar(currentAadhaar);
+    }
+    if (!currentDob) {
+      currentDob = DEMO_DOB;
+      setDob(currentDob);
+    }
+
+    await authenticate({ aadhaar: currentAadhaar, dob: currentDob }, 350);
+  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await authenticate(
+      { aadhaar: aadhaar || DEMO_AADHAAR, dob: dob || DEMO_DOB },
+      400
+    );
   };
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white/80 p-6 shadow-xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80 sm:p-8">
-      {/* Demo Patient Badge */}
-      <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
-        <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/80 dark:text-blue-400">
-            <HeartPulse className="h-4 w-4" />
-          </span>
-          <div>
-            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Patient Authentication</h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300">Identity verification via Aadhaar</p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleDemoFill}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50/80 px-2.5 py-1 text-xs font-semibold text-blue-700 transition-all hover:bg-blue-100 active:scale-95 dark:border-blue-900/50 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/80"
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          Quick Demo Fill
-        </button>
-      </div>
+    <AuthFormShell>
+      <AuthFormHeader
+        accent="blue"
+        icon={HeartPulse}
+        title="Patient Authentication"
+        subtitle="Identity verification via Aadhaar"
+        demoLabel="Quick Demo Fill"
+        onDemoFill={handleDemoFill}
+      />
 
       <AnimatePresence mode="wait">
         {step === 1 && (
@@ -171,50 +177,31 @@ export function PatientAuthForm() {
             onSubmit={handleLoginSubmit}
             className="space-y-5"
           >
-            {error && (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
-                {error}
-              </div>
-            )}
+            <AuthErrorBanner message={error} />
 
-            {/* Aadhaar Input */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Aadhaar Number
-              </label>
-              <div className="relative flex items-center">
-                <CreditCard className="absolute left-3.5 h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={aadhaar}
-                  onChange={handleAadhaarChange}
-                  placeholder="9876 5432 1098"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-4 text-sm tracking-widest text-slate-900 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:focus:border-blue-500 dark:focus:bg-slate-950"
-                />
-              </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                12-digit UIDAI number. Demo token for sandbox authentication.
-              </p>
-            </div>
+            <AuthField
+              accent="blue"
+              icon={CreditCard}
+              label="Aadhaar Number"
+              type="text"
+              value={aadhaar}
+              onChange={handleAadhaarChange}
+              placeholder={DEMO_AADHAAR}
+              inputClassName="tracking-widest"
+              hint="12-digit UIDAI number. Demo token for sandbox authentication."
+            />
 
-            {/* Date of Birth Input */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Date of Birth
-              </label>
-              <div className="relative flex items-center">
-                <Calendar className="absolute left-3.5 h-4 w-4 text-slate-400" />
-                <input
-                  type="date"
-                  value={dob}
-                  onChange={(e) => {
-                    setError("");
-                    setDob(e.target.value);
-                  }}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:focus:border-blue-500 dark:focus:bg-slate-950"
-                />
-              </div>
-            </div>
+            <AuthField
+              accent="blue"
+              icon={Calendar}
+              label="Date of Birth"
+              type="date"
+              value={dob}
+              onChange={(e) => {
+                setError("");
+                setDob(e.target.value);
+              }}
+            />
 
             {/* Instant Login Banner Callout */}
             <div className="rounded-xl border border-blue-200/80 bg-blue-50/70 p-3.5 dark:border-blue-900/50 dark:bg-blue-950/40">
@@ -232,24 +219,25 @@ export function PatientAuthForm() {
                   size="sm"
                   onClick={handleLoginSubmit}
                   disabled={loading}
-                  className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20"
+                  className="rounded-lg bg-blue-600 text-xs font-bold text-white shadow-md shadow-blue-500/20 hover:bg-blue-700"
                 >
-                  {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "1-Click Login"}
+                  {loading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    "1-Click Login"
+                  )}
                 </Button>
               </div>
             </div>
 
             {/* Remember & Forgot options */}
             <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800"
-                />
-                Remember this device
-              </label>
+              <AuthCheckbox
+                accent="blue"
+                checked={rememberMe}
+                onChange={setRememberMe}
+                label="Remember this device"
+              />
               <button
                 type="button"
                 onClick={() => setForgotModal(true)}
@@ -259,23 +247,13 @@ export function PatientAuthForm() {
               </button>
             </div>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:bg-blue-700 active:scale-98 dark:bg-blue-600 dark:hover:bg-blue-500"
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Authenticating Patient...
-                </div>
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  Login to Patient Portal
-                  <ChevronRight className="h-4 w-4" />
-                </div>
-              )}
-            </Button>
+            <AuthSubmitButton
+              accent="blue"
+              loading={loading}
+              loadingLabel="Authenticating Patient..."
+              label="Login to Patient Portal"
+              icon={ChevronRight}
+            />
           </motion.form>
         )}
 
@@ -340,23 +318,13 @@ export function PatientAuthForm() {
               </button>
             </div>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 active:scale-98"
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Verifying OTP...
-                </div>
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  Authenticate & Launch Portal
-                  <CheckCircle2 className="h-4 w-4" />
-                </div>
-              )}
-            </Button>
+            <AuthSubmitButton
+              accent="blue"
+              loading={loading}
+              loadingLabel="Verifying OTP..."
+              label="Authenticate & Launch Portal"
+              icon={CheckCircle2}
+            />
           </motion.form>
         )}
 
@@ -392,8 +360,8 @@ export function PatientAuthForm() {
                       isDone
                         ? "border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/40 dark:bg-emerald-950/20"
                         : isCurrent
-                        ? "border-blue-300 bg-blue-50/80 shadow-sm dark:border-blue-800 dark:bg-blue-950/40"
-                        : "border-slate-100 bg-slate-50/40 opacity-40 dark:border-slate-800/50 dark:bg-slate-900/20"
+                          ? "border-blue-300 bg-blue-50/80 shadow-sm dark:border-blue-800 dark:bg-blue-950/40"
+                          : "border-slate-100 bg-slate-50/40 opacity-40 dark:border-slate-800/50 dark:bg-slate-900/20"
                     }`}
                   >
                     <div
@@ -401,15 +369,23 @@ export function PatientAuthForm() {
                         isDone
                           ? "bg-emerald-500 text-white"
                           : isCurrent
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
                       }`}
                     >
-                      {isDone ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                      {isDone ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <Icon className="h-4 w-4" />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-slate-900 dark:text-white">{s.title}</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{s.desc}</p>
+                      <p className="text-xs font-semibold text-slate-900 dark:text-white">
+                        {s.title}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {s.desc}
+                      </p>
                     </div>
                   </div>
                 );
@@ -425,15 +401,19 @@ export function PatientAuthForm() {
           <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center gap-2 text-slate-900 dark:text-white">
               <HelpCircle className="h-5 w-5 text-blue-600" />
-              <h3 className="text-base font-semibold">Forgot Aadhaar Number?</h3>
+              <h3 className="text-base font-semibold">
+                Forgot Aadhaar Number?
+              </h3>
             </div>
-            <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              In production, patients can retrieve their linked ID via registered mobile SMS or hospital registration card. For this demo, use:
+            <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+              In production, patients can retrieve their linked ID via
+              registered mobile SMS or hospital registration card. For this
+              demo, use:
             </p>
             <div className="mt-3 rounded-lg bg-slate-100 p-3 font-mono text-xs text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-              Demo Aadhaar: 9876 5432 1098
+              Demo Aadhaar: {DEMO_AADHAAR}
               <br />
-              DOB: 1988-05-14
+              DOB: {DEMO_DOB}
             </div>
             <div className="mt-5 flex justify-end">
               <Button
@@ -450,6 +430,6 @@ export function PatientAuthForm() {
           </div>
         </div>
       )}
-    </div>
+    </AuthFormShell>
   );
 }

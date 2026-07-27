@@ -35,3 +35,15 @@ export function handleApiError(error: unknown) {
 
   return errorResponse("An unexpected error occurred.", { status: 500 });
 }
+
+type FailureOptions = {
+  log: string;
+  message: string;
+  status?: number;
+};
+
+/** Logs a route failure and returns the matching error response. */
+export function logAndFail(error: unknown, options: FailureOptions) {
+  console.error(`${options.log}:`, error);
+  return errorResponse(options.message, { status: options.status ?? 500 });
+}

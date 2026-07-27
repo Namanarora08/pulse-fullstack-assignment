@@ -5,17 +5,25 @@ import {
   Building,
   CheckCircle,
   ChevronRight,
-  Eye,
-  EyeOff,
   KeyRound,
-  Loader2,
   Lock,
   Mail,
-  Shield,
-  Sparkles,
+  Shield
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  AuthCheckbox,
+  AuthErrorBanner,
+  AuthField,
+  AuthFormHeader,
+  AuthFormShell,
+  AuthPasswordField,
+  AuthSubmitButton
+} from "@/components/auth/auth-form-primitives";
 import { useAuth } from "@/components/auth/auth-context";
+
+const DEMO_ADMIN_ID = "admin@stjudehealth.org";
+const DEMO_PASSWORD = "SystemAdmin#2026";
+const DEMO_HOSPITAL_CODE = "HOSP-90210";
 
 export function AdminAuthForm() {
   const { login } = useAuth();
@@ -23,23 +31,22 @@ export function AdminAuthForm() {
   const [adminId, setAdminId] = useState("");
   const [password, setPassword] = useState("");
   const [hospitalCode, setHospitalCode] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleDemoFill = () => {
     setError("");
-    setAdminId("admin@stjudehealth.org");
-    setPassword("SystemAdmin#2026");
-    setHospitalCode("HOSP-90210");
+    setAdminId(DEMO_ADMIN_ID);
+    setPassword(DEMO_PASSWORD);
+    setHospitalCode(DEMO_HOSPITAL_CODE);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const loginAdminId = adminId || "admin@stjudehealth.org";
-    const loginPassword = password || "SystemAdmin#2026";
-    const loginHospitalCode = hospitalCode || "HOSP-90210";
+    const loginAdminId = adminId || DEMO_ADMIN_ID;
+    const loginPassword = password || DEMO_PASSWORD;
+    const loginHospitalCode = hospitalCode || DEMO_HOSPITAL_CODE;
     setAdminId(loginAdminId);
     setPassword(loginPassword);
     setHospitalCode(loginHospitalCode);
@@ -50,7 +57,7 @@ export function AdminAuthForm() {
     const res = await login("admin", {
       adminId: loginAdminId,
       password: loginPassword,
-      hospitalCode: loginHospitalCode,
+      hospitalCode: loginHospitalCode
     });
     setLoading(false);
 
@@ -63,28 +70,15 @@ export function AdminAuthForm() {
   };
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white/80 p-6 shadow-xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80 sm:p-8">
-      {/* Header & Governance Branding */}
-      <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
-        <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-            <Shield className="h-4 w-4" />
-          </span>
-          <div>
-            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Hospital Administration</h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300">System Governance Portal</p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleDemoFill}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-slate-100/80 px-2.5 py-1 text-xs font-semibold text-slate-800 transition-all hover:bg-slate-200 active:scale-95 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700"
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          Demo Admin
-        </button>
-      </div>
+    <AuthFormShell>
+      <AuthFormHeader
+        accent="slate"
+        icon={Shield}
+        title="Hospital Administration"
+        subtitle="System Governance Portal"
+        demoLabel="Demo Admin"
+        onDemoFill={handleDemoFill}
+      />
 
       {/* System Status Pill */}
       <div className="mb-5 flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-950/40">
@@ -98,113 +92,68 @@ export function AdminAuthForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
-            {error}
-          </div>
-        )}
+        <AuthErrorBanner message={error} />
 
-        {/* Admin ID Input */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            Admin ID / Email
-          </label>
-          <div className="relative flex items-center">
-            <Mail className="absolute left-3.5 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              value={adminId}
-              onChange={(e) => {
-                setError("");
-                setAdminId(e.target.value);
-              }}
-              placeholder="admin@stjudehealth.org"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:border-slate-500 focus:bg-white focus:ring-2 focus:ring-slate-500/20 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:focus:border-slate-500 dark:focus:bg-slate-950"
-              required
-            />
-          </div>
-        </div>
+        <AuthField
+          accent="slate"
+          icon={Mail}
+          label="Admin ID / Email"
+          type="text"
+          value={adminId}
+          onChange={(e) => {
+            setError("");
+            setAdminId(e.target.value);
+          }}
+          placeholder={DEMO_ADMIN_ID}
+          required
+        />
 
-        {/* Hospital Code Input */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            Hospital Code
-          </label>
-          <div className="relative flex items-center">
-            <KeyRound className="absolute left-3.5 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              value={hospitalCode}
-              onChange={(e) => {
-                setError("");
-                setHospitalCode(e.target.value.toUpperCase());
-              }}
-              placeholder="HOSP-90210"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-4 text-sm uppercase tracking-widest text-slate-900 outline-none transition-all focus:border-slate-500 focus:bg-white focus:ring-2 focus:ring-slate-500/20 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:focus:border-slate-500 dark:focus:bg-slate-950"
-              required
-            />
-          </div>
-        </div>
+        <AuthField
+          accent="slate"
+          icon={KeyRound}
+          label="Hospital Code"
+          type="text"
+          value={hospitalCode}
+          onChange={(e) => {
+            setError("");
+            setHospitalCode(e.target.value.toUpperCase());
+          }}
+          placeholder={DEMO_HOSPITAL_CODE}
+          inputClassName="uppercase tracking-widest"
+          required
+        />
 
-        {/* Password Input with Visibility Toggle */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            Admin Security Password
-          </label>
-          <div className="relative flex items-center">
-            <Lock className="absolute left-3.5 h-4 w-4 text-slate-400" />
-            <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => {
-                setError("");
-                setPassword(e.target.value);
-              }}
-              placeholder="••••••••••••"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-10 text-sm text-slate-900 outline-none transition-all focus:border-slate-500 focus:bg-white focus:ring-2 focus:ring-slate-500/20 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:focus:border-slate-500 dark:focus:bg-slate-950"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-          </div>
-        </div>
+        <AuthPasswordField
+          accent="slate"
+          icon={Lock}
+          label="Admin Security Password"
+          value={password}
+          onChange={(e) => {
+            setError("");
+            setPassword(e.target.value);
+          }}
+          placeholder="••••••••••••"
+          required
+        />
 
         {/* Options */}
         <div className="flex items-center justify-between text-xs">
-          <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-slate-700 focus:ring-slate-500 dark:border-slate-700 dark:bg-slate-800"
-            />
-            Remember admin workstation
-          </label>
+          <AuthCheckbox
+            accent="slate"
+            checked={rememberMe}
+            onChange={setRememberMe}
+            label="Remember admin workstation"
+          />
         </div>
 
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white shadow-lg hover:bg-slate-800 active:scale-98 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-        >
-          {loading ? (
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Verifying Governance Access...
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-2">
-              Launch Admin Management Console
-              <ChevronRight className="h-4 w-4" />
-            </div>
-          )}
-        </Button>
+        <AuthSubmitButton
+          accent="slate"
+          loading={loading}
+          loadingLabel="Verifying Governance Access..."
+          label="Launch Admin Management Console"
+          icon={ChevronRight}
+        />
       </form>
-    </div>
+    </AuthFormShell>
   );
 }

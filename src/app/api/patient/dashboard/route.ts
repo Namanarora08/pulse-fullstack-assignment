@@ -1,121 +1,60 @@
 import { NextRequest } from "next/server";
 
-import { errorResponse, successResponse } from "@/lib/api/responses";
-import { prisma } from "@/lib/prisma";
 import {
-  calculateCategoryIndex,
-  calculateDailyScore,
-  Direction,
-  QuestionCategory,
-  QuestionType
-} from "@/lib/scoring";
+  answersWithQuestionInclude,
+  CheckInRow,
+  findDemoPatient,
+  logAndFail,
+  scoreCheckIn,
+  successResponse,
+  toDateKey
+} from "@/lib/api";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
+
+type PatientRecord = {
+  id: string;
+  name: string;
+  email: string;
+};
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const patientId = searchParams.get("patientId") || "demo";
 
-    let patient = null;
+    const patient = await findDemoPatient<PatientRecord>(patientId);
 
-    if (patientId && patientId !== "demo") {
-      patient = await prisma.patient.findUnique({
-        where: { id: patientId }
-      });
-    }
+    let dailyCheckIns: CheckInRow[] = [];
 
-    if (!patient) {
-      // Look for Avery Stone or stable patient or first patient in DB
-      patient = await prisma.patient.findFirst({
-        where: {
-          OR: [
-            { email: "patient.stable@pulsecare.dev" },
-            { name: { contains: "Avery" } }
-          ]
-        }
-      });
-    }
-
-    if (!patient) {
-      patient = await prisma.patient.findFirst();
-    }
-
-    const resolvedPatientId = patient?.id;
-
-    let dailyCheckIns: Array<{
-      id: string;
-      date: Date;
-      answers: Array<{
-        boolValue: boolean | null;
-        scaleValue: number | null;
-        numericValue: number | null;
-        question: {
-          id: string;
-          category: string;
-          type: string;
-          weight: number;
-          direction: string;
-          rangeMin: number | null;
-          rangeMax: number | null;
-          hardMin: number | null;
-          hardMax: number | null;
-        };
-      }>;
-    }> = [];
-
-    if (resolvedPatientId) {
+    if (patient?.id) {
       dailyCheckIns = await prisma.dailyCheckIn.findMany({
-        where: { patientId: resolvedPatientId },
+        where: { patientId: patient.id },
         take: 30,
         orderBy: { date: "desc" },
-        include: {
-          answers: {
-            include: { question: true }
-          }
-        }
+        include: answersWithQuestionInclude
       });
     }
 
     // Compute scores for each check-in using scoring engine
-    const scoreHistory = dailyCheckIns.map((ci) => {
-      const answersWithQuestions = ci.answers.map((a) => ({
-        question: {
-          id: a.question.id,
-          category: a.question.category as QuestionCategory,
-          type: a.question.type as QuestionType,
-          weight: a.question.weight,
-          direction: a.question.direction as Direction,
-          rangeMin: a.question.rangeMin,
-          rangeMax: a.question.rangeMax,
-          hardMin: a.question.hardMin,
-          hardMax: a.question.hardMax
-        },
-        answer: {
-          questionId: a.question.id,
-          boolValue: a.boolValue,
-          scaleValue: a.scaleValue,
-          numericValue: a.numericValue,
-          skipped: a.boolValue === null && a.scaleValue === null && a.numericValue === null
-        }
-      }));
-
-      const symptomIndex = calculateCategoryIndex(answersWithQuestions, "SYMPTOM");
-      const adherenceIndex = calculateCategoryIndex(answersWithQuestions, "ADHERENCE");
-      const overallScore = calculateDailyScore(symptomIndex, adherenceIndex);
+    const scoreHistory = dailyCheckIns.map((checkIn: CheckInRow) => {
+      const { overallScore, symptomIndex, adherenceIndex } = scoreCheckIn(
+        checkIn.answers
+      );
 
       return {
-        date: ci.date.toISOString().split("T")[0],
+        date: toDateKey(checkIn.date),
         score: overallScore,
         symptomIndex: symptomIndex ?? undefined,
         adherenceIndex: adherenceIndex ?? undefined
       };
     });
 
-    const recentCheckIns = dailyCheckIns.map((ci) => ({
-      id: ci.id,
-      date: ci.date.toISOString(),
-      completed: ci.answers.length > 0
+    const recentCheckIns = dailyCheckIns.map((checkIn: CheckInRow) => ({
+      id: checkIn.id,
+      date: checkIn.date.toISOString(),
+      completed: checkIn.answers.length > 0
     }));
 
     const dashboardData = {
@@ -140,8 +79,9 @@ export async function GET(request: NextRequest) {
 
     return successResponse(dashboardData);
   } catch (error) {
-    console.error("Error fetching patient dashboard:", error);
-    return errorResponse("Failed to fetch patient dashboard", { status: 500 });
+    return logAndFail(error, {
+      log: "Error fetching patient dashboard",
+      message: "Failed to fetch patient dashboard"
+    });
   }
 }
-
