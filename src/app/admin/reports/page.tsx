@@ -117,7 +117,8 @@ export default function AdminClinicalUploadsPage() {
           setIsUploadModalOpen(false);
           setFormSuccess("");
         }, 800);
-      } catch {
+      } catch (err) {
+        console.error("Failed to save clinical report:", err);
         setFormError("Failed to save clinical report.");
       } finally {
         setIsSubmitting(false);

@@ -546,8 +546,8 @@ export function getInitialAdminStore(): AdminStoreData {
         return parsed;
       }
     }
-  } catch {
-    // fallback
+  } catch (err) {
+    console.error("Failed to read persisted admin store, reseeding defaults:", err);
   }
 
   const initialStore: AdminStoreData = {
@@ -640,8 +640,8 @@ export function saveAdminStore(data: AdminStoreData): void {
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(LOCAL_STORAGE_ADMIN_KEY, JSON.stringify(data));
-    } catch {
-      // storage quota or error
+    } catch (err) {
+      console.error("Failed to persist admin store to localStorage:", err);
     }
   }
 }

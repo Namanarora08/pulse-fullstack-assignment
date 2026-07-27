@@ -19,9 +19,14 @@ export default function PatientCheckInPage() {
     async function loadQuestionsAndDraft() {
       try {
         setLoading(true);
+        setError(null);
         const res = await safeFetchJson<{ data?: QuestionItem[] }>("/api/patient/checklist");
-        const qList: QuestionItem[] = res.data?.data || [];
-        setQuestions(qList);
+        if (!res.ok) {
+          setQuestions([]);
+          setError(res.error || "Failed to load questions. Please try again.");
+          return;
+        }
+        setQuestions(res.data?.data || []);
 
         // Fetch existing draft answers if present
         type DraftAnswerItem = { questionId: string; scaleValue?: number; booleanValue?: boolean; numericValue?: number; skipped?: boolean };

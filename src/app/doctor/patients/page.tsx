@@ -26,20 +26,26 @@ export default function DoctorPatientsPage() {
   const [patients, setPatients] = useState<PatientRow[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadPatients() {
       try {
         setLoading(true);
+        setError(null);
         const url = searchQuery
           ? `/api/doctor/patients?q=${encodeURIComponent(searchQuery)}`
           : "/api/doctor/patients";
         const res = await safeFetchJson<{ data?: PatientRow[] }>(url);
-        if (res.ok && res.data) {
-          setPatients(res.data.data || []);
+        if (!res.ok) {
+          setPatients([]);
+          setError(res.error || "Failed to load patient roster.");
+          return;
         }
+        setPatients(res.data?.data || []);
       } catch (err) {
         console.error("Error loading patient list:", err);
+        setError("Failed to load patient roster.");
       } finally {
         setLoading(false);
       }
@@ -70,6 +76,13 @@ export default function DoctorPatientsPage() {
 
       {loading ? (
         <LoadingSkeletons />
+      ) : error ? (
+        <p
+          role="alert"
+          className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-700 dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-300"
+        >
+          {error}
+        </p>
       ) : patients.length > 0 ? (
         <Card>
           <CardContent className="p-0">

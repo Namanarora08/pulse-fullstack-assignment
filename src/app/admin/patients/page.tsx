@@ -138,7 +138,8 @@ export default function AdminPatientsPage() {
           setIsCreateModalOpen(false);
           setFormSuccess("");
         }, 800);
-      } catch {
+      } catch (err) {
+        console.error("Failed to create patient:", err);
         setFormError("Failed to create patient record.");
       } finally {
         setIsSubmitting(false);
@@ -185,7 +186,8 @@ export default function AdminPatientsPage() {
           setEditingPatient(null);
           setFormSuccess("");
         }, 800);
-      } catch {
+      } catch (err) {
+        console.error("Failed to update patient:", err);
         setFormError("Failed to update patient record.");
       } finally {
         setIsSubmitting(false);
