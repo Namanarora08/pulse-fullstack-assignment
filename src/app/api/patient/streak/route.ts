@@ -1,12 +1,11 @@
-import { NextRequest } from "next/server";
-
+import { guardRoute } from "@/lib/api/auth-guard";
 import { errorResponse, successResponse } from "@/lib/api/responses";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-async function resolvePatientId(patientIdParam?: string | null): Promise<string> {
-  if (patientIdParam && patientIdParam !== "demo") {
+async function resolvePatientId(patientIdParam: string): Promise<string> {
+  if (patientIdParam) {
     const existing = await prisma.patient.findUnique({
       where: { id: patientIdParam },
       select: { id: true }
@@ -36,25 +35,31 @@ interface CheckInItemForStreak {
   answers: Array<{ id: string }>;
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const rawPatientId = searchParams.get("patientId");
-    const patientId = await resolvePatientId(rawPatientId);
+export async function GET() {
+  const { session, response } = await guardRoute(["patient"]);
+  if (!session) return response;
 
-    const checkIns: CheckInItemForStreak[] = await prisma.dailyCheckIn.findMany({
-      where: { patientId },
-      select: { id: true, date: true, answers: { select: { id: true } } },
-      orderBy: { date: "desc" }
-    });
+  try {
+    const patientId = await resolvePatientId(session.userId);
+
+    const checkIns: CheckInItemForStreak[] = await prisma.dailyCheckIn.findMany(
+      {
+        where: { patientId },
+        select: { id: true, date: true, answers: { select: { id: true } } },
+        orderBy: { date: "desc" }
+      }
+    );
 
     // A check-in counts as completed if it has at least one answer recorded
-    const completedCheckIns = checkIns.filter((c: CheckInItemForStreak) => c.answers.length > 0);
+    const completedCheckIns = checkIns.filter(
+      (c: CheckInItemForStreak) => c.answers.length > 0
+    );
 
     let streakCount = 0;
     if (completedCheckIns.length > 0) {
       const dates = completedCheckIns.map(
-        (c: CheckInItemForStreak) => new Date(c.date).toISOString().split("T")[0]
+        (c: CheckInItemForStreak) =>
+          new Date(c.date).toISOString().split("T")[0]
       );
 
       const uniqueDates: string[] = Array.from(new Set<string>(dates)).sort(
@@ -69,8 +74,8 @@ export async function GET(request: NextRequest) {
       const checkDate = uniqueDates.includes(today)
         ? new Date(today)
         : uniqueDates.includes(yesterday)
-        ? new Date(yesterday)
-        : null;
+          ? new Date(yesterday)
+          : null;
 
       if (checkDate) {
         while (true) {
@@ -96,4 +101,3 @@ export async function GET(request: NextRequest) {
     return errorResponse("Failed to calculate streak", { status: 500 });
   }
 }
-

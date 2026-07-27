@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 
+import { guardRoute } from "@/lib/api/auth-guard";
 import { errorResponse, successResponse } from "@/lib/api/responses";
 import { prisma } from "@/lib/prisma";
 import { calculateCategoryIndex, calculateDailyScore } from "@/lib/scoring";
@@ -37,6 +38,9 @@ interface DailyCheckInDetail {
 }
 
 export async function GET(_request: NextRequest, { params }: RouteProps) {
+  const { session, response } = await guardRoute(["doctor", "admin"]);
+  if (!session) return response;
+
   try {
     const { id } = await params;
 
@@ -59,10 +63,7 @@ export async function GET(_request: NextRequest, { params }: RouteProps) {
       // Look by name/email keyword
       patient = await prisma.patient.findFirst({
         where: {
-          OR: [
-            { email: { contains: id } },
-            { name: { contains: id } }
-          ]
+          OR: [{ email: { contains: id } }, { name: { contains: id } }]
         },
         include: {
           dailyCheckIns: {
@@ -81,9 +82,15 @@ export async function GET(_request: NextRequest, { params }: RouteProps) {
     if (!patient) {
       const fallback = {
         id,
-        name: id === "mira" ? "Mira Patel" : id === "jordan" ? "Jordan Lee" : "Avery Stone",
+        name:
+          id === "mira"
+            ? "Mira Patel"
+            : id === "jordan"
+              ? "Jordan Lee"
+              : "Avery Stone",
         email: `${id}@pulsecare.dev`,
-        status: id === "mira" ? "Watch" : id === "jordan" ? "Improving" : "Stable",
+        status:
+          id === "mira" ? "Watch" : id === "jordan" ? "Improving" : "Stable",
         condition: "General Monitoring",
         checkIns: [],
         scores: []
@@ -94,10 +101,16 @@ export async function GET(_request: NextRequest, { params }: RouteProps) {
     let status = "Stable";
     let condition = "General Monitoring";
 
-    if (patient.email.includes("deteriorating") || patient.name.includes("Mira")) {
+    if (
+      patient.email.includes("deteriorating") ||
+      patient.name.includes("Mira")
+    ) {
       status = "Watch";
       condition = "Post-op Care";
-    } else if (patient.email.includes("improving") || patient.name.includes("Jordan")) {
+    } else if (
+      patient.email.includes("improving") ||
+      patient.name.includes("Jordan")
+    ) {
       status = "Improving";
       condition = "Recovery Protocol";
     }
@@ -120,12 +133,21 @@ export async function GET(_request: NextRequest, { params }: RouteProps) {
           boolValue: a.boolValue,
           scaleValue: a.scaleValue,
           numericValue: a.numericValue,
-          skipped: a.boolValue === null && a.scaleValue === null && a.numericValue === null
+          skipped:
+            a.boolValue === null &&
+            a.scaleValue === null &&
+            a.numericValue === null
         }
       }));
 
-      const symptomIndex = calculateCategoryIndex(answersWithQuestions, "SYMPTOM");
-      const adherenceIndex = calculateCategoryIndex(answersWithQuestions, "ADHERENCE");
+      const symptomIndex = calculateCategoryIndex(
+        answersWithQuestions,
+        "SYMPTOM"
+      );
+      const adherenceIndex = calculateCategoryIndex(
+        answersWithQuestions,
+        "ADHERENCE"
+      );
       const overallScore = calculateDailyScore(symptomIndex, adherenceIndex);
 
       return {
@@ -156,4 +178,3 @@ export async function GET(_request: NextRequest, { params }: RouteProps) {
     return errorResponse("Failed to fetch patient detail", { status: 500 });
   }
 }
-

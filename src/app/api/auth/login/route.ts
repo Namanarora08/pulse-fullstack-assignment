@@ -1,150 +1,148 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+
+import { AuthSession, SESSION_COOKIE_NAME } from "@/lib/auth";
 import {
-  AuthSession,
-  DEMO_ADMIN,
-  DEMO_DOCTORS,
-  DEMO_PATIENTS,
-  SESSION_COOKIE_NAME,
-} from "@/lib/auth";
+  authenticateAdmin,
+  authenticateDoctor,
+  findPatientByAadhaar,
+  hydrateSession
+} from "@/lib/demo-accounts";
+import {
+  SESSION_MAX_AGE_SECONDS,
+  SessionPayload,
+  signSession
+} from "@/lib/session";
+
+const loginSchema = z.discriminatedUnion("role", [
+  z.object({
+    role: z.literal("patient"),
+    aadhaar: z.string().min(12).max(20),
+    dob: z.string().optional()
+  }),
+  z.object({
+    role: z.literal("doctor"),
+    email: z.string().email(),
+    password: z.string().min(1)
+  }),
+  z.object({
+    role: z.literal("admin"),
+    adminId: z.string().min(1),
+    password: z.string().min(1),
+    hospitalCode: z.string().min(1)
+  })
+]);
+
+const INVALID_CREDENTIALS = "Invalid credentials.";
+
+function newToken(prefix: string): string {
+  return `${prefix}-${crypto.randomUUID()}`;
+}
 
 export async function POST(req: NextRequest) {
+  let body: unknown;
   try {
-    const body = await req.json();
-    const { role, aadhaar, dob, email, password, adminId, hospitalCode } = body;
+    body = await req.json();
+  } catch {
+    return NextResponse.json(
+      { success: false, error: "Invalid request body." },
+      { status: 400 }
+    );
+  }
 
-    if (!role || !["patient", "doctor", "admin"].includes(role)) {
+  const parsed = loginSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { success: false, error: "Invalid or missing credentials." },
+      { status: 400 }
+    );
+  }
+
+  const input = parsed.data;
+  let payload: SessionPayload | null = null;
+
+  if (input.role === "patient") {
+    const sanitizedAadhaar = input.aadhaar.replace(/\s/g, "");
+    if (!/^\d{12}$/.test(sanitizedAadhaar)) {
       return NextResponse.json(
-        { success: false, error: "Invalid or missing user role." },
-        { status: 400 }
-      );
-    }
-
-    let sessionPayload: AuthSession | null = null;
-
-    // -----------------------------------------------------------------------
-    // PATIENT AUTHENTICATION
-    // -----------------------------------------------------------------------
-    if (role === "patient") {
-      let sanitizedAadhaar = (aadhaar || "").replace(/\s/g, "");
-      if (sanitizedAadhaar.length !== 12 || !/^\d{12}$/.test(sanitizedAadhaar)) {
-        // Fall back to demo patient Aadhaar if empty or improperly formatted
-        sanitizedAadhaar = "987654321098";
-      }
-
-      // Find matching demo patient or create hydrated patient record
-      const formattedAadhaar = `${sanitizedAadhaar.slice(0, 4)} ${sanitizedAadhaar.slice(4, 8)} ${sanitizedAadhaar.slice(8, 12)}`;
-      let patient = DEMO_PATIENTS.find(
-        (p) => p.aadhaar.replace(/\s/g, "") === sanitizedAadhaar
-      );
-
-      if (!patient) {
-        // Fallback demo hydration if custom 12-digit Aadhaar is entered
-        patient = {
-          ...DEMO_PATIENTS[0],
-          id: `pat-${sanitizedAadhaar.slice(-5)}`,
-          aadhaar: formattedAadhaar,
-          dob: dob || DEMO_PATIENTS[0].dob,
-        };
-      }
-
-      sessionPayload = {
-        role: "patient",
-        user: patient,
-        token: `pat-tok-${Date.now()}`,
-        authenticatedAt: new Date().toISOString(),
-      };
-    }
-
-    // -----------------------------------------------------------------------
-    // DOCTOR AUTHENTICATION
-    // -----------------------------------------------------------------------
-    else if (role === "doctor") {
-      if (!email || !password) {
-        return NextResponse.json(
-          { success: false, error: "Please enter hospital email and password." },
-          { status: 400 }
-        );
-      }
-
-      const normalizedEmail = email.trim().toLowerCase();
-      let doctor = DEMO_DOCTORS.find(
-        (d) => d.email.toLowerCase() === normalizedEmail
-      );
-
-      if (!doctor) {
-        doctor = {
-          id: `doc-${Date.now()}`,
-          name: email.split("@")[0].replace(".", " ").toUpperCase(),
-          email: normalizedEmail,
-          title: "Attending Specialist",
-          department: "Cardiology",
-          hospital: "St. Jude Heart Institute",
-          assignedPatientIds: ["pat-rahul-88201"],
-        };
-      }
-
-      sessionPayload = {
-        role: "doctor",
-        user: doctor,
-        token: `doc-tok-${Date.now()}`,
-        authenticatedAt: new Date().toISOString(),
-      };
-    }
-
-    // -----------------------------------------------------------------------
-    // ADMIN AUTHENTICATION
-    // -----------------------------------------------------------------------
-    else if (role === "admin") {
-      if (!adminId || !password || !hospitalCode) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Please enter Admin ID, Password, and Hospital Code.",
-          },
-          { status: 400 }
-        );
-      }
-
-      sessionPayload = {
-        role: "admin",
-        user: {
-          ...DEMO_ADMIN,
-          email: adminId,
-          hospitalCode: hospitalCode,
-        },
-        token: `adm-tok-${Date.now()}`,
-        authenticatedAt: new Date().toISOString(),
-      };
-    }
-
-    if (!sessionPayload) {
-      return NextResponse.json(
-        { success: false, error: "Authentication failed." },
+        { success: false, error: INVALID_CREDENTIALS },
         { status: 401 }
       );
     }
 
-    const response = NextResponse.json({
-      success: true,
-      session: sessionPayload,
-    });
+    const patient = findPatientByAadhaar(sanitizedAadhaar);
+    if (!patient || (input.dob && input.dob !== patient.dob)) {
+      return NextResponse.json(
+        { success: false, error: INVALID_CREDENTIALS },
+        { status: 401 }
+      );
+    }
 
-    // Set HTTP Cookie for server/middleware session persistence
-    response.cookies.set({
-      name: SESSION_COOKIE_NAME,
-      value: encodeURIComponent(JSON.stringify(sessionPayload)),
-      httpOnly: false, // Accessible client-side & server-side
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      sameSite: "lax",
-    });
+    payload = {
+      role: "patient",
+      userId: patient.id,
+      aadhaar: sanitizedAadhaar,
+      token: newToken("pat-tok"),
+      authenticatedAt: new Date().toISOString()
+    };
+  } else if (input.role === "doctor") {
+    const doctor = authenticateDoctor(input.email, input.password);
+    if (!doctor) {
+      return NextResponse.json(
+        { success: false, error: INVALID_CREDENTIALS },
+        { status: 401 }
+      );
+    }
 
-    return response;
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Internal server error";
+    payload = {
+      role: "doctor",
+      userId: doctor.id,
+      email: doctor.email,
+      token: newToken("doc-tok"),
+      authenticatedAt: new Date().toISOString()
+    };
+  } else {
+    const admin = authenticateAdmin(
+      input.adminId,
+      input.password,
+      input.hospitalCode
+    );
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: INVALID_CREDENTIALS },
+        { status: 401 }
+      );
+    }
+
+    payload = {
+      role: "admin",
+      userId: admin.id,
+      email: admin.email,
+      hospitalCode: admin.hospitalCode,
+      token: newToken("adm-tok"),
+      authenticatedAt: new Date().toISOString()
+    };
+  }
+
+  const session: AuthSession | null = hydrateSession(payload);
+  if (!session) {
     return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 }
+      { success: false, error: INVALID_CREDENTIALS },
+      { status: 401 }
     );
   }
+
+  const response = NextResponse.json({ success: true, session });
+
+  response.cookies.set({
+    name: SESSION_COOKIE_NAME,
+    value: await signSession(payload),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: SESSION_MAX_AGE_SECONDS,
+    sameSite: "lax"
+  });
+
+  return response;
 }

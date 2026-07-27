@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE_NAME } from "@/lib/auth";
+import { verifySession } from "@/lib/session";
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Protected route prefixes
@@ -13,17 +14,10 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const sessionCookie = req.cookies.get(SESSION_COOKIE_NAME)?.value;
-  let userRole: string | null = null;
-
-  if (sessionCookie) {
-    try {
-      const parsed = JSON.parse(decodeURIComponent(sessionCookie));
-      userRole = parsed.role;
-    } catch {
-      userRole = null;
-    }
-  }
+  const session = await verifySession(
+    req.cookies.get(SESSION_COOKIE_NAME)?.value
+  );
+  const userRole = session?.role ?? null;
 
   // Redirect to login if unauthenticated or accessing wrong role area
   if (isPatientRoute && userRole !== "patient") {
@@ -51,5 +45,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/patient/:path*", "/doctor/:path*", "/admin/:path*"],
+  matcher: ["/patient/:path*", "/doctor/:path*", "/admin/:path*"]
 };

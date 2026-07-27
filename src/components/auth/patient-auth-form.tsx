@@ -16,14 +16,14 @@ import {
   RefreshCw,
   ShieldCheck,
   Sparkles,
-  UserCheck,
+  UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/auth-context";
 
 export function PatientAuthForm() {
   const { login } = useAuth();
-  
+
   // Step: 1 = Credentials, 2 = OTP verification, 3 = Simulated data hydration
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [aadhaar, setAadhaar] = useState("");
@@ -33,16 +33,36 @@ export function PatientAuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [forgotModal, setForgotModal] = useState(false);
-  
+
   // Simulated sync steps for Step 3
   const [syncIndex, setSyncIndex] = useState(0);
 
   const syncSteps = [
-    { title: "Verifying Aadhaar Identity", desc: "UIDAI Auth Token validated", icon: ShieldCheck },
-    { title: "Fetching Medical History", desc: "Discharge Summary & Diseases", icon: FileText },
-    { title: "Syncing Care Team", desc: "Assigned Doctor: Dr. Sarah Jenkins", icon: UserCheck },
-    { title: "Loading Prescriptions & Diet", desc: "Active Medications & Meals", icon: Pill },
-    { title: "Hydrating Recovery Status", desc: "14-Day Streak & Daily Score", icon: HeartPulse },
+    {
+      title: "Verifying Aadhaar Identity",
+      desc: "UIDAI Auth Token validated",
+      icon: ShieldCheck
+    },
+    {
+      title: "Fetching Medical History",
+      desc: "Discharge Summary & Diseases",
+      icon: FileText
+    },
+    {
+      title: "Syncing Care Team",
+      desc: "Assigned Doctor: Dr. Sarah Jenkins",
+      icon: UserCheck
+    },
+    {
+      title: "Loading Prescriptions & Diet",
+      desc: "Active Medications & Meals",
+      icon: Pill
+    },
+    {
+      title: "Hydrating Recovery Status",
+      desc: "14-Day Streak & Daily Score",
+      icon: HeartPulse
+    }
   ];
 
   const formatAadhaar = (val: string) => {
@@ -69,22 +89,15 @@ export function PatientAuthForm() {
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (aadhaar.replace(/\s/g, "").length !== 12 || !dob) {
+      setError("Enter your 12-digit Aadhaar number and date of birth.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
-    let currentAadhaar = aadhaar;
-    let currentDob = dob;
-
-    if (!currentAadhaar || currentAadhaar.replace(/\s/g, "").length !== 12) {
-      currentAadhaar = "9876 5432 1098";
-      setAadhaar(currentAadhaar);
-    }
-    if (!currentDob) {
-      currentDob = "1988-05-14";
-      setDob(currentDob);
-    }
-
-    const res = await login("patient", { aadhaar: currentAadhaar, dob: currentDob });
+    const res = await login("patient", { aadhaar, dob });
     setLoading(false);
 
     if (!res.success) {
@@ -113,7 +126,10 @@ export function PatientAuthForm() {
     setLoading(true);
     setError("");
 
-    const res = await login("patient", { aadhaar: aadhaar || "9876 5432 1098", dob: dob || "1988-05-14" });
+    const res = await login("patient", {
+      aadhaar: aadhaar || "9876 5432 1098",
+      dob: dob || "1988-05-14"
+    });
     setLoading(false);
 
     if (!res.success) {
@@ -146,8 +162,12 @@ export function PatientAuthForm() {
             <HeartPulse className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Patient Authentication</h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300">Identity verification via Aadhaar</p>
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+              Patient Authentication
+            </h2>
+            <p className="text-xs text-slate-600 dark:text-slate-300">
+              Identity verification via Aadhaar
+            </p>
           </div>
         </div>
 
@@ -232,16 +252,20 @@ export function PatientAuthForm() {
                   size="sm"
                   onClick={handleLoginSubmit}
                   disabled={loading}
-                  className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20"
+                  className="rounded-lg bg-blue-600 text-xs font-bold text-white shadow-md shadow-blue-500/20 hover:bg-blue-700"
                 >
-                  {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "1-Click Login"}
+                  {loading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    "1-Click Login"
+                  )}
                 </Button>
               </div>
             </div>
 
             {/* Remember & Forgot options */}
             <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
+              <label className="flex cursor-pointer items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
                 <input
                   type="checkbox"
                   checked={rememberMe}
@@ -262,7 +286,7 @@ export function PatientAuthForm() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:bg-blue-700 active:scale-98 dark:bg-blue-600 dark:hover:bg-blue-500"
+              className="active:scale-98 w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
@@ -343,7 +367,7 @@ export function PatientAuthForm() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 active:scale-98"
+              className="active:scale-98 w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
@@ -392,8 +416,8 @@ export function PatientAuthForm() {
                       isDone
                         ? "border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/40 dark:bg-emerald-950/20"
                         : isCurrent
-                        ? "border-blue-300 bg-blue-50/80 shadow-sm dark:border-blue-800 dark:bg-blue-950/40"
-                        : "border-slate-100 bg-slate-50/40 opacity-40 dark:border-slate-800/50 dark:bg-slate-900/20"
+                          ? "border-blue-300 bg-blue-50/80 shadow-sm dark:border-blue-800 dark:bg-blue-950/40"
+                          : "border-slate-100 bg-slate-50/40 opacity-40 dark:border-slate-800/50 dark:bg-slate-900/20"
                     }`}
                   >
                     <div
@@ -401,15 +425,23 @@ export function PatientAuthForm() {
                         isDone
                           ? "bg-emerald-500 text-white"
                           : isCurrent
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
                       }`}
                     >
-                      {isDone ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                      {isDone ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <Icon className="h-4 w-4" />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-slate-900 dark:text-white">{s.title}</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{s.desc}</p>
+                      <p className="text-xs font-semibold text-slate-900 dark:text-white">
+                        {s.title}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {s.desc}
+                      </p>
                     </div>
                   </div>
                 );
@@ -425,10 +457,14 @@ export function PatientAuthForm() {
           <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center gap-2 text-slate-900 dark:text-white">
               <HelpCircle className="h-5 w-5 text-blue-600" />
-              <h3 className="text-base font-semibold">Forgot Aadhaar Number?</h3>
+              <h3 className="text-base font-semibold">
+                Forgot Aadhaar Number?
+              </h3>
             </div>
-            <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              In production, patients can retrieve their linked ID via registered mobile SMS or hospital registration card. For this demo, use:
+            <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+              In production, patients can retrieve their linked ID via
+              registered mobile SMS or hospital registration card. For this
+              demo, use:
             </p>
             <div className="mt-3 rounded-lg bg-slate-100 p-3 font-mono text-xs text-slate-800 dark:bg-slate-800 dark:text-slate-200">
               Demo Aadhaar: 9876 5432 1098
