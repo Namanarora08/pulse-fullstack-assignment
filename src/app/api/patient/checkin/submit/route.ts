@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { NextRequest } from "next/server";
 
+import { guardRoute } from "@/lib/api/auth-guard";
 import { errorResponse, successResponse } from "@/lib/api/responses";
 import { prisma } from "@/lib/prisma";
 import { calculateCategoryIndex, calculateDailyScore } from "@/lib/scoring";
@@ -8,8 +9,8 @@ import { checkInSubmitSchema, validateJsonBody } from "@/validators";
 
 export const dynamic = "force-dynamic";
 
-async function resolvePatientId(patientIdParam?: string | null): Promise<string> {
-  if (patientIdParam && patientIdParam !== "demo") {
+async function resolvePatientId(patientIdParam: string): Promise<string> {
+  if (patientIdParam) {
     const existing = await prisma.patient.findUnique({
       where: { id: patientIdParam },
       select: { id: true }
@@ -55,101 +56,125 @@ interface AnswerForSubmit {
 }
 
 export async function POST(request: NextRequest) {
+  const { session, response } = await guardRoute(["patient"]);
+  if (!session) return response;
+
   try {
     const body = await validateJsonBody(request, checkInSubmitSchema);
-    const patientId = await resolvePatientId(body.patientId);
+    const patientId = await resolvePatientId(session.userId);
 
     let checkInDate = new Date();
     if (body.date) {
       checkInDate = new Date(body.date);
+      if (Number.isNaN(checkInDate.getTime())) {
+        return errorResponse("Invalid date", { status: 400 });
+      }
     }
     checkInDate.setHours(0, 0, 0, 0);
 
-    const submittedCheckIn = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      let checkIn = await tx.dailyCheckIn.findFirst({
-        where: {
-          patientId,
-          date: checkInDate
-        }
-      });
-
-      if (!checkIn) {
-        checkIn = await tx.dailyCheckIn.create({
-          data: {
+    const submittedCheckIn = await prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        let checkIn = await tx.dailyCheckIn.findFirst({
+          where: {
             patientId,
             date: checkInDate
           }
         });
-      }
 
-      if (body.answers && body.answers.length > 0) {
-        for (const ans of body.answers) {
-          const boolVal = ans.booleanValue ?? (ans as unknown as { boolValue?: boolean }).boolValue ?? null;
-          const isSkipped = Boolean(ans.skipped);
-
-          await tx.answer.upsert({
-            where: {
-              dailyCheckInId_questionId: {
-                dailyCheckInId: checkIn.id,
-                questionId: ans.questionId
-              }
-            },
-            update: {
-              boolValue: isSkipped ? null : boolVal,
-              scaleValue: isSkipped ? null : (ans.scaleValue ?? null),
-              numericValue: isSkipped ? null : (ans.numericValue ?? null)
-            },
-            create: {
-              dailyCheckInId: checkIn.id,
-              questionId: ans.questionId,
-              boolValue: isSkipped ? null : boolVal,
-              scaleValue: isSkipped ? null : (ans.scaleValue ?? null),
-              numericValue: isSkipped ? null : (ans.numericValue ?? null)
+        if (!checkIn) {
+          checkIn = await tx.dailyCheckIn.create({
+            data: {
+              patientId,
+              date: checkInDate
             }
           });
         }
-      }
 
-      return tx.dailyCheckIn.findUnique({
-        where: { id: checkIn.id },
-        include: {
-          answers: {
-            include: {
-              question: true
-            }
+        if (body.answers && body.answers.length > 0) {
+          for (const ans of body.answers) {
+            const boolVal =
+              ans.booleanValue ??
+              (ans as unknown as { boolValue?: boolean }).boolValue ??
+              null;
+            const isSkipped = Boolean(ans.skipped);
+
+            await tx.answer.upsert({
+              where: {
+                dailyCheckInId_questionId: {
+                  dailyCheckInId: checkIn.id,
+                  questionId: ans.questionId
+                }
+              },
+              update: {
+                boolValue: isSkipped ? null : boolVal,
+                scaleValue: isSkipped ? null : (ans.scaleValue ?? null),
+                numericValue: isSkipped ? null : (ans.numericValue ?? null)
+              },
+              create: {
+                dailyCheckInId: checkIn.id,
+                questionId: ans.questionId,
+                boolValue: isSkipped ? null : boolVal,
+                scaleValue: isSkipped ? null : (ans.scaleValue ?? null),
+                numericValue: isSkipped ? null : (ans.numericValue ?? null)
+              }
+            });
           }
         }
-      });
-    });
+
+        return tx.dailyCheckIn.findUnique({
+          where: { id: checkIn.id },
+          include: {
+            answers: {
+              include: {
+                question: true
+              }
+            }
+          }
+        });
+      }
+    );
 
     if (!submittedCheckIn) {
-      return errorResponse("Failed to record check-in submission", { status: 500 });
+      return errorResponse("Failed to record check-in submission", {
+        status: 500
+      });
     }
 
     // Compute score using official scoring engine
-    const answersWithQuestions = submittedCheckIn.answers.map((a: AnswerForSubmit) => ({
-      question: {
-        id: a.question.id,
-        category: a.question.category,
-        type: a.question.type,
-        weight: a.question.weight,
-        direction: a.question.direction,
-        rangeMin: a.question.rangeMin,
-        rangeMax: a.question.rangeMax,
-        hardMin: a.question.hardMin,
-        hardMax: a.question.hardMax
-      },
-      answer: {
-        questionId: a.question.id,
-        boolValue: a.boolValue,
-        scaleValue: a.scaleValue,
-        numericValue: a.numericValue,
-        skipped: a.boolValue === null && a.scaleValue === null && a.numericValue === null
-      }
-    }));
+    const answersWithQuestions = submittedCheckIn.answers.map(
+      (a: AnswerForSubmit) => ({
+        question: {
+          id: a.question.id,
+          category: a.question.category,
+          type: a.question.type,
+          weight: a.question.weight,
+          direction: a.question.direction,
+          rangeMin: a.question.rangeMin,
+          rangeMax: a.question.rangeMax,
+          hardMin: a.question.hardMin,
+          hardMax: a.question.hardMax
+        },
+        answer: {
+          questionId: a.question.id,
+          boolValue: a.boolValue,
+          scaleValue: a.scaleValue,
+          numericValue: a.numericValue,
+          skipped:
+            a.boolValue === null &&
+            a.scaleValue === null &&
+            a.numericValue === null
+        }
+      })
+    );
 
-    const symptomIndex = calculateCategoryIndex(answersWithQuestions, "SYMPTOM");
-    const adherenceIndex = calculateCategoryIndex(answersWithQuestions, "ADHERENCE");
+    const symptomIndex = calculateCategoryIndex(
+      answersWithQuestions,
+      "SYMPTOM"
+    );
+    const adherenceIndex = calculateCategoryIndex(
+      answersWithQuestions,
+      "ADHERENCE"
+    );
     const overallScore = calculateDailyScore(symptomIndex, adherenceIndex);
 
     const formattedResponse = {
@@ -169,7 +194,10 @@ export async function POST(request: NextRequest) {
         booleanValue: a.boolValue,
         scaleValue: a.scaleValue,
         numericValue: a.numericValue,
-        skipped: a.boolValue === null && a.scaleValue === null && a.numericValue === null,
+        skipped:
+          a.boolValue === null &&
+          a.scaleValue === null &&
+          a.numericValue === null,
         question: a.question
       }))
     };
@@ -180,4 +208,3 @@ export async function POST(request: NextRequest) {
     return errorResponse("Failed to submit check-in", { status: 400 });
   }
 }
-

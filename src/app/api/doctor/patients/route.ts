@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 
+import { guardRoute } from "@/lib/api/auth-guard";
 import { errorResponse, successResponse } from "@/lib/api/responses";
 import { prisma } from "@/lib/prisma";
 
@@ -16,17 +17,17 @@ interface PatientWithCheckIns {
 }
 
 export async function GET(request: NextRequest) {
+  const { session, response } = await guardRoute(["doctor", "admin"]);
+  if (!session) return response;
+
   try {
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get("q") || "";
+    const query = (searchParams.get("q") || "").slice(0, 100);
 
     const patients: PatientWithCheckIns[] = await prisma.patient.findMany({
       where: query
         ? {
-            OR: [
-              { name: { contains: query } },
-              { email: { contains: query } }
-            ]
+            OR: [{ name: { contains: query } }, { email: { contains: query } }]
           }
         : {},
       include: {
@@ -112,4 +113,3 @@ export async function GET(request: NextRequest) {
     return errorResponse("Failed to fetch patients", { status: 500 });
   }
 }
-

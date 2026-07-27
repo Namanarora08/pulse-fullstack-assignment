@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 
+import { guardRoute } from "@/lib/api/auth-guard";
 import { errorResponse, successResponse } from "@/lib/api/responses";
 import { prisma } from "@/lib/prisma";
 import { calculateCategoryIndex, calculateDailyScore } from "@/lib/scoring";
@@ -19,10 +20,7 @@ async function resolvePatientId(idParam: string): Promise<string> {
 
   const keywordMatch = await prisma.patient.findFirst({
     where: {
-      OR: [
-        { email: { contains: idParam } },
-        { name: { contains: idParam } }
-      ]
+      OR: [{ email: { contains: idParam } }, { name: { contains: idParam } }]
     },
     select: { id: true }
   });
@@ -59,6 +57,9 @@ interface CheckInItem {
 }
 
 export async function GET(_request: NextRequest, { params }: RouteProps) {
+  const { session, response } = await guardRoute(["doctor", "admin"]);
+  if (!session) return response;
+
   try {
     const { id } = await params;
     const patientId = await resolvePatientId(id);
@@ -92,12 +93,21 @@ export async function GET(_request: NextRequest, { params }: RouteProps) {
             boolValue: a.boolValue,
             scaleValue: a.scaleValue,
             numericValue: a.numericValue,
-            skipped: a.boolValue === null && a.scaleValue === null && a.numericValue === null
+            skipped:
+              a.boolValue === null &&
+              a.scaleValue === null &&
+              a.numericValue === null
           }
         }));
 
-        const symptomIndex = calculateCategoryIndex(answersWithQuestions, "SYMPTOM");
-        const adherenceIndex = calculateCategoryIndex(answersWithQuestions, "ADHERENCE");
+        const symptomIndex = calculateCategoryIndex(
+          answersWithQuestions,
+          "SYMPTOM"
+        );
+        const adherenceIndex = calculateCategoryIndex(
+          answersWithQuestions,
+          "ADHERENCE"
+        );
         const overallScore = calculateDailyScore(symptomIndex, adherenceIndex);
         const dateStr = ci.date.toISOString().split("T")[0];
 
@@ -131,4 +141,3 @@ export async function GET(_request: NextRequest, { params }: RouteProps) {
     return errorResponse("Failed to fetch chart data", { status: 500 });
   }
 }
-

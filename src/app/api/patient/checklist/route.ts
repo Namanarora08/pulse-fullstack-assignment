@@ -1,3 +1,4 @@
+import { guardRoute } from "@/lib/api/auth-guard";
 import { successResponse } from "@/lib/api/responses";
 import { prisma } from "@/lib/prisma";
 
@@ -18,6 +19,13 @@ interface DbQuestion {
 }
 
 export async function GET() {
+  const { session, response } = await guardRoute([
+    "patient",
+    "doctor",
+    "admin"
+  ]);
+  if (!session) return response;
+
   try {
     const dbQuestions: DbQuestion[] = await prisma.question.findMany({
       orderBy: { order: "asc" }
@@ -39,8 +47,18 @@ export async function GET() {
         unit: q.unit,
         minValue: q.type === "SCALE" ? 1 : q.rangeMin,
         maxValue: q.type === "SCALE" ? 5 : q.rangeMax,
-        minLabel: q.type === "SCALE" ? (q.direction === "HIGHER_BETTER" ? "Low" : "Mild") : null,
-        maxLabel: q.type === "SCALE" ? (q.direction === "HIGHER_BETTER" ? "High" : "Severe") : null
+        minLabel:
+          q.type === "SCALE"
+            ? q.direction === "HIGHER_BETTER"
+              ? "Low"
+              : "Mild"
+            : null,
+        maxLabel:
+          q.type === "SCALE"
+            ? q.direction === "HIGHER_BETTER"
+              ? "High"
+              : "Severe"
+            : null
       }));
       return successResponse(formatted);
     }
@@ -126,4 +144,3 @@ export async function GET() {
 
   return successResponse(fallbackQuestions);
 }
-

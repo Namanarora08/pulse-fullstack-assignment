@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   Sparkles,
   Stethoscope,
-  Users,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/auth-context";
@@ -35,15 +35,15 @@ export function DoctorAuthForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const loginEmail = email || "dr.smith@stjudehealth.org";
-    const loginPassword = password || "Cardiology#2026";
-    setEmail(loginEmail);
-    setPassword(loginPassword);
+    if (!email || !password) {
+      setError("Enter your hospital email and password.");
+      return;
+    }
 
     setLoading(true);
     setError("");
 
-    const res = await login("doctor", { email: loginEmail, password: loginPassword });
+    const res = await login("doctor", { email, password });
     setLoading(false);
 
     if (!res.success) {
@@ -63,8 +63,12 @@ export function DoctorAuthForm() {
             <Stethoscope className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Doctor Workspace</h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300">St. Jude Heart & Vascular Institute</p>
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+              Doctor Workspace
+            </h2>
+            <p className="text-xs text-slate-600 dark:text-slate-300">
+              St. Jude Heart & Vascular Institute
+            </p>
           </div>
         </div>
 
@@ -140,14 +144,18 @@ export function DoctorAuthForm() {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </button>
           </div>
         </div>
 
         {/* Options */}
         <div className="flex items-center justify-between text-xs">
-          <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
+          <label className="flex cursor-pointer items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
             <input
               type="checkbox"
               checked={rememberMe}
@@ -183,7 +191,7 @@ export function DoctorAuthForm() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-700 active:scale-98 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+          className="active:scale-98 w-full rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500"
         >
           {loading ? (
             <div className="flex items-center gap-2">

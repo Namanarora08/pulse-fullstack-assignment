@@ -1,5 +1,4 @@
-import { NextRequest } from "next/server";
-
+import { guardRoute } from "@/lib/api/auth-guard";
 import { errorResponse, successResponse } from "@/lib/api/responses";
 import { prisma } from "@/lib/prisma";
 import {
@@ -12,14 +11,17 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
+  const { session, response } = await guardRoute(["patient"]);
+  if (!session) return response;
+
   try {
-    const { searchParams } = new URL(request.url);
-    const patientId = searchParams.get("patientId") || "demo";
+    // The patient is always taken from the session, never from the request.
+    const patientId = session.userId;
 
     let patient = null;
 
-    if (patientId && patientId !== "demo") {
+    if (patientId) {
       patient = await prisma.patient.findUnique({
         where: { id: patientId }
       });
@@ -96,12 +98,21 @@ export async function GET(request: NextRequest) {
           boolValue: a.boolValue,
           scaleValue: a.scaleValue,
           numericValue: a.numericValue,
-          skipped: a.boolValue === null && a.scaleValue === null && a.numericValue === null
+          skipped:
+            a.boolValue === null &&
+            a.scaleValue === null &&
+            a.numericValue === null
         }
       }));
 
-      const symptomIndex = calculateCategoryIndex(answersWithQuestions, "SYMPTOM");
-      const adherenceIndex = calculateCategoryIndex(answersWithQuestions, "ADHERENCE");
+      const symptomIndex = calculateCategoryIndex(
+        answersWithQuestions,
+        "SYMPTOM"
+      );
+      const adherenceIndex = calculateCategoryIndex(
+        answersWithQuestions,
+        "ADHERENCE"
+      );
       const overallScore = calculateDailyScore(symptomIndex, adherenceIndex);
 
       return {
@@ -144,4 +155,3 @@ export async function GET(request: NextRequest) {
     return errorResponse("Failed to fetch patient dashboard", { status: 500 });
   }
 }
-
