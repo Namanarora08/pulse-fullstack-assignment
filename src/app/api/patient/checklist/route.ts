@@ -1,3 +1,4 @@
+import { handleApiError, isDatabaseUnavailableError } from "@/lib/api/errors";
 import { successResponse } from "@/lib/api/responses";
 import { prisma } from "@/lib/prisma";
 
@@ -45,7 +46,13 @@ export async function GET() {
       return successResponse(formatted);
     }
   } catch (error) {
-    console.warn("Failed to fetch questions from database:", error);
+    if (!isDatabaseUnavailableError(error)) {
+      return handleApiError(error, "GET /api/patient/checklist");
+    }
+    console.error(
+      "[api] GET /api/patient/checklist: database unavailable, serving fallback questions:",
+      error
+    );
   }
 
   // Fallback active checklist questions if DB query returns empty or fails

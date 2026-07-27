@@ -35,8 +35,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Ensure cookie is in sync with localStorage for middleware
         document.cookie = `${SESSION_COOKIE_NAME}=${encodeURIComponent(JSON.stringify(parsed))}; path=/; max-age=604800; SameSite=Lax`;
       }
-    } catch {
-      // Fallback ignore error
+    } catch (err) {
+      // A corrupt stored session must not be kept: drop it and start unauthenticated.
+      console.error("Failed to restore stored auth session:", err);
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      document.cookie = `${SESSION_COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
+      setSession(null);
     } finally {
       setIsLoading(false);
     }
@@ -69,8 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-    } catch {
-      // Ignore network errors on logout
+    } catch (err) {
+      // The local session is cleared regardless, but the failure must be visible.
+      console.error("Logout request failed, clearing local session anyway:", err);
     } finally {
       setSession(null);
       localStorage.removeItem(LOCAL_STORAGE_KEY);

@@ -116,7 +116,8 @@ export default function AdminDoctorsPage() {
           setIsCreateModalOpen(false);
           setFormSuccess("");
         }, 800);
-      } catch {
+      } catch (err) {
+        console.error("Failed to register physician:", err);
         setFormError("Failed to register physician record.");
       } finally {
         setIsSubmitting(false);
@@ -150,7 +151,8 @@ export default function AdminDoctorsPage() {
           setEditingDoctor(null);
           setFormSuccess("");
         }, 800);
-      } catch {
+      } catch (err) {
+        console.error("Failed to update physician:", err);
         setFormError("Failed to update physician record.");
       } finally {
         setIsSubmitting(false);

@@ -55,6 +55,7 @@ export function CardDeckCheckin({
   const [answers, setAnswers] = useState<Record<string, AnswerState>>(initialAnswers);
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Framer Motion drag mechanics for top card
   const x = useMotionValue(0);
@@ -113,12 +114,17 @@ export function CardDeckCheckin({
 
   const finishCheckin = async () => {
     setSubmitting(true);
+    setSubmitError(null);
     try {
       const finalAnswers = Object.values(answers);
       await onComplete(finalAnswers);
       setCompleted(true);
     } catch (err) {
       console.error("Error submitting deck:", err);
+      setSubmitError(
+        err instanceof Error ? err.message : "Failed to submit check-in. Please try again."
+      );
+      setCurrentIndex(Math.max(questions.length - 1, 0));
     } finally {
       setSubmitting(false);
     }
@@ -190,8 +196,27 @@ export function CardDeckCheckin({
 
   if (isLast || !currentQ) {
     return (
-      <div className="py-12 text-center text-slate-500">
-        All questions completed! Submitting...
+      <div className="space-y-4 py-12 text-center">
+        {submitError ? (
+          <>
+            <p
+              role="alert"
+              className="mx-auto max-w-lg rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-700 dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-300"
+            >
+              {submitError}
+            </p>
+            <Button
+              type="button"
+              onClick={finishCheckin}
+              disabled={submitting}
+              className="rounded-xl bg-blue-600 px-5 text-xs font-bold text-white hover:bg-blue-700"
+            >
+              {submitting ? "Retrying..." : "Retry submission"}
+            </Button>
+          </>
+        ) : (
+          <p className="text-slate-500">All questions completed! Submitting...</p>
+        )}
       </div>
     );
   }
@@ -216,6 +241,15 @@ export function CardDeckCheckin({
           />
         </div>
       </div>
+
+      {submitError && (
+        <p
+          role="alert"
+          className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-700 dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-300"
+        >
+          {submitError}
+        </p>
+      )}
 
       {/* Tinder Card Container */}
       <div className="relative min-h-[420px] w-full flex items-center justify-center">

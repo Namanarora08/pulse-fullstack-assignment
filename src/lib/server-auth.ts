@@ -8,7 +8,8 @@ export async function getServerSession(): Promise<AuthSession | null> {
     const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME)?.value;
     if (!sessionCookie) return null;
     return JSON.parse(decodeURIComponent(sessionCookie)) as AuthSession;
-  } catch {
+  } catch (err) {
+    console.error("Failed to parse session cookie:", err);
     return null;
   }
 }

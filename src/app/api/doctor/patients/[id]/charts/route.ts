@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
-import { errorResponse, successResponse } from "@/lib/api/responses";
+import { handleApiError } from "@/lib/api/errors";
+import { successResponse } from "@/lib/api/responses";
 import { prisma } from "@/lib/prisma";
 import { calculateCategoryIndex, calculateDailyScore } from "@/lib/scoring";
 
@@ -127,8 +128,7 @@ export async function GET(_request: NextRequest, { params }: RouteProps) {
 
     return successResponse(fallbackData);
   } catch (error) {
-    console.error("Error fetching patient chart data:", error);
-    return errorResponse("Failed to fetch chart data", { status: 500 });
+    return handleApiError(error, "GET /api/doctor/patients/[id]/charts");
   }
 }
 

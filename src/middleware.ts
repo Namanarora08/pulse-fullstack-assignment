@@ -20,7 +20,8 @@ export function middleware(req: NextRequest) {
     try {
       const parsed = JSON.parse(decodeURIComponent(sessionCookie));
       userRole = parsed.role;
-    } catch {
+    } catch (err) {
+      console.error("Failed to parse session cookie in middleware:", err);
       userRole = null;
     }
   }

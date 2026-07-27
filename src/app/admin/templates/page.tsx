@@ -145,7 +145,8 @@ export default function AdminTemplatesPage() {
           setIsCreateModalOpen(false);
           setFormSuccess("");
         }, 800);
-      } catch {
+      } catch (err) {
+        console.error("Failed to create disease template:", err);
         setFormError("Failed to save disease template.");
       } finally {
         setIsSubmitting(false);
@@ -178,7 +179,8 @@ export default function AdminTemplatesPage() {
           setEditingTemplate(null);
           setFormSuccess("");
         }, 800);
-      } catch {
+      } catch (err) {
+        console.error("Failed to update disease template:", err);
         setFormError("Failed to update disease template.");
       } finally {
         setIsSubmitting(false);

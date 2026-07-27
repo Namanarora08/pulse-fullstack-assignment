@@ -1,27 +1,32 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PrismaClient } from "@prisma/client";
 
+import { isDatabaseUnavailableError } from "@/lib/api/errors";
+
 const globalForPrisma = globalThis as unknown as {
   prisma: any;
 };
 
-const createMockModelProxy = () => {
-  return new Proxy(
-    {},
-    {
-      get(_target, prop) {
-        if (prop === "then") return undefined;
-        return async (...args: any[]) => {
-          if (prop === "findMany" || prop === "findRaw") return [];
-          if (prop === "count") return 0;
-          if (prop === "create" || prop === "createMany") return args[0]?.data ?? {};
-          if (prop === "update" || prop === "updateMany" || prop === "upsert") return args[0]?.data ?? {};
-          return null;
-        };
-      }
-    }
-  );
-};
+/**
+ * Read-only queries may degrade to empty results when the database is
+ * unreachable; writes must always fail loudly so callers never see a
+ * fabricated success.
+ */
+const READ_ONLY_METHODS = new Set([
+  "findMany",
+  "findFirst",
+  "findUnique",
+  "findRaw",
+  "count",
+  "aggregate",
+  "groupBy"
+]);
+
+function degradedReadResult(method: string) {
+  if (method === "findMany" || method === "findRaw" || method === "groupBy") return [];
+  if (method === "count") return 0;
+  return null;
+}
 
 function getResilientPrismaClient() {
   try {
@@ -44,15 +49,19 @@ function getResilientPrismaClient() {
                   try {
                     return await modelMethod.apply(modelTarget, args);
                   } catch (err) {
-                    console.warn(
-                      `[AI Studio] Prisma DB query error on ${String(prop)}.${String(modelProp)}:`,
-                      err
-                    );
-                    if (modelProp === "findMany") return [];
-                    if (modelProp === "count") return 0;
-                    if (modelProp === "create" || modelProp === "createMany")
-                      return args[0]?.data ?? {};
-                    return null;
+                    const operation = `${String(prop)}.${String(modelProp)}`;
+                    const method = String(modelProp);
+
+                    if (isDatabaseUnavailableError(err) && READ_ONLY_METHODS.has(method)) {
+                      console.error(
+                        `[prisma] database unavailable during ${operation}, returning empty result:`,
+                        err
+                      );
+                      return degradedReadResult(method);
+                    }
+
+                    console.error(`[prisma] query failed on ${operation}:`, err);
+                    throw err;
                   }
                 };
               }
@@ -63,9 +72,9 @@ function getResilientPrismaClient() {
         return orig;
       }
     });
-  } catch {
-    console.warn("[AI Studio] Database not connected — using mock Prisma");
-    return new Proxy({}, { get: () => createMockModelProxy() });
+  } catch (err) {
+    console.error("[prisma] failed to instantiate PrismaClient:", err);
+    throw err;
   }
 }
 

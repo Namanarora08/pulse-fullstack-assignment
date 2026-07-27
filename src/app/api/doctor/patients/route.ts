@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
-import { errorResponse, successResponse } from "@/lib/api/responses";
+import { handleApiError } from "@/lib/api/errors";
+import { successResponse } from "@/lib/api/responses";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -108,8 +109,7 @@ export async function GET(request: NextRequest) {
 
     return successResponse(fallbackPatients);
   } catch (error) {
-    console.error("Error fetching patient roster:", error);
-    return errorResponse("Failed to fetch patients", { status: 500 });
+    return handleApiError(error, "GET /api/doctor/patients");
   }
 }
 

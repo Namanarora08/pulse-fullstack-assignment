@@ -7,10 +7,31 @@ import {
   SESSION_COOKIE_NAME,
 } from "@/lib/auth";
 
+type LoginRequestBody = {
+  role?: string;
+  aadhaar?: string;
+  dob?: string;
+  email?: string;
+  password?: string;
+  adminId?: string;
+  hospitalCode?: string;
+};
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { role, aadhaar, dob, email, password, adminId, hospitalCode } = body;
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch (err) {
+      console.error("[api] POST /api/auth/login: malformed JSON body:", err);
+      return NextResponse.json(
+        { success: false, error: "Request body must be valid JSON." },
+        { status: 400 }
+      );
+    }
+
+    const { role, aadhaar, dob, email, password, adminId, hospitalCode } =
+      body as LoginRequestBody;
 
     if (!role || !["patient", "doctor", "admin"].includes(role)) {
       return NextResponse.json(
@@ -141,9 +162,9 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Internal server error";
+    console.error("[api] POST /api/auth/login failed:", err);
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: "Internal server error" },
       { status: 500 }
     );
   }

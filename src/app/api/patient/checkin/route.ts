@@ -1,7 +1,8 @@
 import { Prisma } from "@prisma/client";
 import { NextRequest } from "next/server";
 
-import { errorResponse, successResponse } from "@/lib/api/responses";
+import { handleApiError } from "@/lib/api/errors";
+import { successResponse } from "@/lib/api/responses";
 import { prisma } from "@/lib/prisma";
 import { checkInDraftSchema, validateJsonBody } from "@/validators";
 
@@ -93,8 +94,7 @@ export async function GET(request: NextRequest) {
       answers: formattedAnswers
     });
   } catch (error) {
-    console.error("Error fetching draft check-in:", error);
-    return errorResponse("Failed to fetch check-in", { status: 500 });
+    return handleApiError(error, "GET /api/patient/checkin");
   }
 }
 
@@ -159,8 +159,7 @@ export async function PATCH(request: NextRequest) {
 
     return successResponse(updatedCheckIn);
   } catch (error) {
-    console.error("Error updating draft check-in:", error);
-    return errorResponse("Failed to save draft check-in", { status: 400 });
+    return handleApiError(error, "PATCH /api/patient/checkin");
   }
 }
 

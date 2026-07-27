@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { NextRequest } from "next/server";
 
+import { handleApiError } from "@/lib/api/errors";
 import { errorResponse, successResponse } from "@/lib/api/responses";
 import { prisma } from "@/lib/prisma";
 import { calculateCategoryIndex, calculateDailyScore } from "@/lib/scoring";
@@ -176,8 +177,7 @@ export async function POST(request: NextRequest) {
 
     return successResponse(formattedResponse, { status: 201 });
   } catch (error) {
-    console.error("Error submitting check-in:", error);
-    return errorResponse("Failed to submit check-in", { status: 400 });
+    return handleApiError(error, "POST /api/patient/checkin/submit");
   }
 }
 

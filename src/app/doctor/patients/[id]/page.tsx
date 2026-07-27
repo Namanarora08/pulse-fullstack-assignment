@@ -61,35 +61,47 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
   const [chartData, setChartData] = useState<Array<{ label: string; value: number }>>([]);
   const [answersList, setAnswersList] = useState<CheckInAnswerItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
+        setErrors([]);
+        const failures: string[] = [];
         const [patRes, chartRes, ansRes] = await Promise.all([
           safeFetchJson<{ data?: PatientDetail }>(`/api/doctor/patients/${id}`),
           safeFetchJson<{ data?: ChartItem[] }>(`/api/doctor/patients/${id}/charts`),
           safeFetchJson<{ data?: CheckInAnswerItem[] }>(`/api/doctor/patients/${id}/answers`)
         ]);
 
-        if (patRes.ok && patRes.data) {
-          setPatient(patRes.data.data || null);
+        if (patRes.ok) {
+          setPatient(patRes.data?.data || null);
+        } else {
+          failures.push(patRes.error || "Failed to load patient record.");
         }
 
-        if (chartRes.ok && chartRes.data) {
-          const items: ChartItem[] = chartRes.data.data || [];
+        if (chartRes.ok) {
+          const items: ChartItem[] = chartRes.data?.data || [];
           const formatted = items.map((c) => ({
             label: c.label || (typeof c.date === "string" ? c.date.slice(5, 10) : "Day"),
             value: typeof c.value === "number" ? c.value : c.score || 70
           }));
           setChartData(formatted);
+        } else {
+          failures.push(chartRes.error || "Failed to load chart data.");
         }
 
-        if (ansRes.ok && ansRes.data) {
-          setAnswersList(ansRes.data.data || []);
+        if (ansRes.ok) {
+          setAnswersList(ansRes.data?.data || []);
+        } else {
+          failures.push(ansRes.error || "Failed to load check-in responses.");
         }
+
+        setErrors(failures);
       } catch (err) {
         console.error("Error loading patient details:", err);
+        setErrors(["Failed to load patient details."]);
       } finally {
         setLoading(false);
       }
@@ -144,6 +156,17 @@ export default function PatientDetailPage({ params }: PatientDetailPageProps) {
         title={patient?.name || `Patient ${id}`}
         description={`Clinical overview and daily check-in history for ${patient?.email || id}`}
       />
+
+      {errors.length > 0 && (
+        <div
+          role="alert"
+          className="space-y-1 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-700 dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-300"
+        >
+          {errors.map((message) => (
+            <p key={message}>{message}</p>
+          ))}
+        </div>
+      )}
 
       <section className="grid gap-4 md:grid-cols-3">
         {metrics.map((metric) => (

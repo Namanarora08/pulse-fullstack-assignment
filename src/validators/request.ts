@@ -1,15 +1,17 @@
 import type { NextRequest } from "next/server";
 import type { ZodSchema, z } from "zod";
 
+import { InvalidJsonBodyError } from "@/lib/api/errors";
+
 export async function validateJsonBody<TSchema extends ZodSchema>(
   request: NextRequest,
   schema: TSchema
 ): Promise<z.infer<TSchema>> {
-  let body: unknown = {};
+  let body: unknown;
   try {
     body = await request.json();
-  } catch {
-    body = {};
+  } catch (error) {
+    throw new InvalidJsonBodyError(error);
   }
 
   return schema.parse(body);
