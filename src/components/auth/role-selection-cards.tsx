@@ -1,132 +1,135 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, HeartPulse, Shield, Stethoscope, UserCheck } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowRight, HeartPulse, Shield, Stethoscope } from "lucide-react";
 
 export type RoleType = "patient" | "doctor" | "admin";
 
-interface RoleCardProps {
-  role: RoleType;
-  title: string;
-  badge: string;
-  description: string;
-  icon: typeof UserCheck;
-  activeRole?: RoleType;
-  onSelect: (role: RoleType) => void;
-  accentColor: "blue" | "emerald" | "slate";
-}
-
-const rolesData: RoleCardProps[] = [
+const rolesData = [
   {
-    role: "patient",
-    title: "Patient Portal",
-    badge: "Aadhaar Verified",
-    description: "Access daily recovery check-ins, medication tracking, diet plans, and direct doctor updates.",
+    role: "patient" as RoleType,
+    title: "Patient",
+    subtitle: "Recovery Portal",
+    description:
+      "Daily check-ins, medication tracking, and real-time recovery insights.",
     icon: HeartPulse,
-    accentColor: "blue",
-    onSelect: () => {},
+    accent: "#34D399", // recovery green
+    accentDim: "rgba(52,211,153,0.08)",
+    accentBorder: "rgba(52,211,153,0.18)",
+    accentGlow: "0 0 32px rgba(52,211,153,0.15)"
   },
   {
-    role: "doctor",
-    title: "Doctor Workspace",
-    badge: "Clinical Gateway",
-    description: "Monitor patient discharge trends, risk levels, questionnaires, and approve recovery milestones.",
+    role: "doctor" as RoleType,
+    title: "Doctor",
+    subtitle: "Clinical Workspace",
+    description:
+      "Monitor patient cohorts, review submissions, and manage care plans.",
     icon: Stethoscope,
-    accentColor: "emerald",
-    onSelect: () => {},
+    accent: "#818CF8", // indigo / neutral purple
+    accentDim: "rgba(129,140,248,0.08)",
+    accentBorder: "rgba(129,140,248,0.18)",
+    accentGlow: "0 0 32px rgba(129,140,248,0.15)"
   },
   {
-    role: "admin",
-    title: "Admin Portal",
-    badge: "System Governance",
-    description: "Manage patient lifecycles, assign care teams, upload clinical reports, and configure templates.",
+    role: "admin" as RoleType,
+    title: "Admin",
+    subtitle: "System Console",
+    description:
+      "Hospital governance, physician rosters, and system-wide analytics.",
     icon: Shield,
-    accentColor: "slate",
-    onSelect: () => {},
-  },
+    accent: "#A1A1AA", // neutral zinc
+    accentDim: "rgba(161,161,170,0.06)",
+    accentBorder: "rgba(161,161,170,0.14)",
+    accentGlow: "0 0 32px rgba(161,161,170,0.10)"
+  }
 ];
 
 export function RoleSelectionCards({
   selectedRole,
-  onSelectRole,
+  onSelectRole
 }: {
   selectedRole?: RoleType;
   onSelectRole: (role: RoleType) => void;
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-3">
-      {rolesData.map((item) => {
+    <div className="flex flex-col gap-3">
+      {rolesData.map((item, i) => {
         const Icon = item.icon;
         const isSelected = selectedRole === item.role;
 
         return (
-          <motion.div
+          <motion.button
             key={item.role}
-            whileHover={{ y: -6, scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            type="button"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              delay: i * 0.08,
+              type: "spring",
+              stiffness: 300,
+              damping: 25
+            }}
+            whileHover={{ scale: 1.015, y: -1 }}
+            whileTap={{ scale: 0.985 }}
             onClick={() => onSelectRole(item.role)}
-            className={cn(
-              "group relative flex cursor-pointer flex-col justify-between overflow-hidden rounded-2xl border p-6 backdrop-blur-xl transition-all duration-300",
-              isSelected
-                ? "border-blue-500/80 bg-white/95 shadow-xl shadow-blue-500/10 dark:border-blue-500 dark:bg-slate-900/95"
-                : "border-slate-200/80 bg-white/60 hover:border-slate-300 hover:bg-white/90 hover:shadow-lg dark:border-slate-800/80 dark:bg-slate-900/60 dark:hover:border-slate-700 dark:hover:bg-slate-900/90"
-            )}
+            className="transition-apple-fast group relative flex w-full items-center gap-4 rounded-2xl px-5 py-4 text-left"
+            style={{
+              background: isSelected
+                ? item.accentDim
+                : "rgba(255,255,255,0.02)",
+              border: `1px solid ${isSelected ? item.accentBorder : "rgba(255,255,255,0.07)"}`,
+              boxShadow: isSelected ? item.accentGlow : "none"
+            }}
           >
-            {/* Subtle glow highlight on hover */}
+            {/* Icon */}
             <div
-              className={cn(
-                "absolute -right-12 -top-12 h-32 w-32 rounded-full opacity-0 blur-2xl transition-opacity group-hover:opacity-100",
-                item.role === "patient" && "bg-blue-500/30",
-                item.role === "doctor" && "bg-emerald-500/30",
-                item.role === "admin" && "bg-slate-500/30"
-              )}
-            />
+              className="transition-apple-fast flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+              style={{
+                background: isSelected
+                  ? item.accentDim
+                  : "rgba(255,255,255,0.04)",
+                border: `1px solid ${isSelected ? item.accentBorder : "rgba(255,255,255,0.07)"}`,
+                color: isSelected ? item.accent : "#71717A"
+              }}
+            >
+              <Icon className="h-5 w-5" />
+            </div>
 
-            <div className="relative z-10 space-y-4">
-              <div className="flex items-center justify-between">
-                <div
-                  className={cn(
-                    "flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
-                    item.role === "patient" && "bg-blue-50 text-blue-600 dark:bg-blue-950/80 dark:text-blue-400",
-                    item.role === "doctor" && "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400",
-                    item.role === "admin" && "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                  )}
-                >
-                  <Icon className="h-6 w-6" aria-hidden="true" />
-                </div>
+            {/* Text */}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline gap-2">
                 <span
-                  className={cn(
-                    "rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide uppercase",
-                    item.role === "patient" && "bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300",
-                    item.role === "doctor" && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300",
-                    item.role === "admin" && "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                  )}
+                  className="text-sm font-semibold"
+                  style={{ color: isSelected ? item.accent : "#FAFAFA" }}
                 >
-                  {item.badge}
-                </span>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
                   {item.title}
-                </h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                  {item.description}
-                </p>
+                </span>
+                <span className="text-xs text-text-muted">{item.subtitle}</span>
               </div>
+              <p className="mt-0.5 line-clamp-1 text-xs leading-snug text-text-muted">
+                {item.description}
+              </p>
             </div>
 
-            <div className="relative z-10 mt-6 flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                Select {item.role.charAt(0).toUpperCase() + item.role.slice(1)} Login
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 group-hover:bg-blue-600 group-hover:text-white transition-all dark:bg-slate-800 dark:text-slate-300">
-                <ArrowRight className="h-4 w-4" />
-              </div>
-            </div>
-          </motion.div>
+            {/* Arrow */}
+            <motion.div
+              animate={{ x: isSelected ? 0 : -4, opacity: isSelected ? 1 : 0 }}
+              className="shrink-0"
+              style={{ color: item.accent }}
+            >
+              <ArrowRight className="h-4 w-4" />
+            </motion.div>
+
+            {/* Selected indicator bar */}
+            {isSelected && (
+              <motion.div
+                layoutId="role-indicator"
+                className="absolute left-0 top-1/2 h-8 w-0.5 -translate-y-1/2 rounded-full"
+                style={{ background: item.accent }}
+                transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+              />
+            )}
+          </motion.button>
         );
       })}
     </div>

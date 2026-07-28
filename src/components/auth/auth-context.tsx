@@ -2,16 +2,25 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AuthSession, PatientRecord, DoctorRecord, AdminRecord, UserRole, SESSION_COOKIE_NAME } from "@/lib/auth";
+import {
+  FullSession,
+  PatientRecord,
+  DoctorRecord,
+  AdminRecord,
+  UserRole
+} from "@/lib/auth";
 import { safeFetchJson } from "@/lib/api-client";
 
 interface AuthContextType {
-  session: AuthSession | null;
+  session: FullSession | null;
   role: UserRole | null;
   user: PatientRecord | DoctorRecord | AdminRecord | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (role: UserRole, payload: Record<string, unknown>) => Promise<{ success: boolean; error?: string }>;
+  login: (
+    role: UserRole,
+    payload: Record<string, unknown>
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updatePatientData: (updater: (prev: PatientRecord) => PatientRecord) => void;
 }
@@ -22,18 +31,21 @@ const LOCAL_STORAGE_KEY = "pulse_auth_session";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [session, setSession] = useState<AuthSession | null>(null);
+  const [session, setSession] = useState<FullSession | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Initialize session from localStorage / cookie on mount
+  // Initialize session from localStorage on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved) as AuthSession;
-        setSession(parsed);
-        // Ensure cookie is in sync with localStorage for middleware
-        document.cookie = `${SESSION_COOKIE_NAME}=${encodeURIComponent(JSON.stringify(parsed))}; path=/; max-age=604800; SameSite=Lax`;
+        const parsed = JSON.parse(saved) as FullSession;
+        // Check if session is expired
+        if (parsed.expiresAt && new Date(parsed.expiresAt) > new Date()) {
+          setSession(parsed);
+        } else {
+          localStorage.removeItem(LOCAL_STORAGE_KEY);
+        }
       }
     } catch {
       // Fallback ignore error
@@ -44,24 +56,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (role: UserRole, payload: Record<string, unknown>) => {
     try {
-      const res = await safeFetchJson<{ success?: boolean; error?: string; session?: AuthSession }>("/api/auth/login", {
+      const res = await safeFetchJson<{
+        success?: boolean;
+        error?: string;
+        session?: FullSession;
+      }>("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role, ...payload }),
+        body: JSON.stringify({ role, ...payload })
       });
 
       if (!res.ok || !res.data || !res.data.success || !res.data.session) {
-        return { success: false, error: res.data?.error || res.error || "Authentication failed" };
+        return {
+          success: false,
+          error: res.data?.error || res.error || "Authentication failed"
+        };
       }
 
-      const newSession: AuthSession = res.data.session;
+      const newSession: FullSession = res.data.session;
       setSession(newSession);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSession));
-      document.cookie = `${SESSION_COOKIE_NAME}=${encodeURIComponent(JSON.stringify(newSession))}; path=/; max-age=604800; SameSite=Lax`;
 
       return { success: true };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Network error during login";
+      const msg =
+        err instanceof Error ? err.message : "Network error during login";
       return { success: false, error: msg };
     }
   };
@@ -74,19 +93,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setSession(null);
       localStorage.removeItem(LOCAL_STORAGE_KEY);
-      document.cookie = `${SESSION_COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
       router.push("/login");
     }
   };
 
-  const updatePatientData = (updater: (prev: PatientRecord) => PatientRecord) => {
+  const updatePatientData = (
+    updater: (prev: PatientRecord) => PatientRecord
+  ) => {
     setSession((prevSession) => {
       if (!prevSession || prevSession.role !== "patient") return prevSession;
       const currentPatient = prevSession.user as PatientRecord;
       const updatedPatient = updater(currentPatient);
-      const newSession: AuthSession = {
+      const newSession: FullSession = {
         ...prevSession,
-        user: updatedPatient,
+        user: updatedPatient
       };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSession));
       return newSession;
@@ -103,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         login,
         logout,
-        updatePatientData,
+        updatePatientData
       }}
     >
       {children}

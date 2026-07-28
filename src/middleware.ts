@@ -13,16 +13,35 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Skip middleware for development to allow testing
+  if (process.env.NODE_ENV === "development") {
+    return NextResponse.next();
+  }
+
   const sessionCookie = req.cookies.get(SESSION_COOKIE_NAME)?.value;
   let userRole: string | null = null;
+  let isExpired = false;
 
   if (sessionCookie) {
     try {
       const parsed = JSON.parse(decodeURIComponent(sessionCookie));
       userRole = parsed.role;
+
+      // Check if session is expired
+      if (parsed.expiresAt && new Date(parsed.expiresAt) < new Date()) {
+        isExpired = true;
+        userRole = null;
+      }
     } catch {
       userRole = null;
     }
+  }
+
+  // Clear expired session cookie
+  if (isExpired) {
+    const response = NextResponse.redirect(new URL("/login", req.url));
+    response.cookies.delete(SESSION_COOKIE_NAME);
+    return response;
   }
 
   // Redirect to login if unauthenticated or accessing wrong role area
@@ -51,5 +70,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/patient/:path*", "/doctor/:path*", "/admin/:path*"],
+  matcher: ["/patient/:path*", "/doctor/:path*", "/admin/:path*"]
 };

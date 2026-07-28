@@ -11,20 +11,29 @@ import {
   HeartPulse,
   HelpCircle,
   Loader2,
-  Lock,
   Pill,
   RefreshCw,
   ShieldCheck,
   Sparkles,
-  UserCheck,
+  UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/auth-context";
+import { useRouter } from "next/navigation";
+
+const inputClass = [
+  "w-full rounded-xl px-4 py-2.5 text-sm",
+  "bg-white/[0.04] border border-white/[0.08]",
+  "text-foreground placeholder:text-text-muted",
+  "outline-none transition-apple-fast",
+  "focus:bg-white/[0.06] focus:border-white/[0.18] focus:ring-1 focus:ring-white/[0.12]"
+].join(" ");
 
 export function PatientAuthForm() {
   const { login } = useAuth();
-  
-  // Step: 1 = Credentials, 2 = OTP verification, 3 = Simulated data hydration
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const router = useRouter();
+
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [aadhaar, setAadhaar] = useState("");
   const [dob, setDob] = useState("");
@@ -33,68 +42,46 @@ export function PatientAuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [forgotModal, setForgotModal] = useState(false);
-  
-  // Simulated sync steps for Step 3
   const [syncIndex, setSyncIndex] = useState(0);
 
   const syncSteps = [
-    { title: "Verifying Aadhaar Identity", desc: "UIDAI Auth Token validated", icon: ShieldCheck },
-    { title: "Fetching Medical History", desc: "Discharge Summary & Diseases", icon: FileText },
-    { title: "Syncing Care Team", desc: "Assigned Doctor: Dr. Sarah Jenkins", icon: UserCheck },
-    { title: "Loading Prescriptions & Diet", desc: "Active Medications & Meals", icon: Pill },
-    { title: "Hydrating Recovery Status", desc: "14-Day Streak & Daily Score", icon: HeartPulse },
+    {
+      title: "Verifying Aadhaar Identity",
+      desc: "UIDAI token validated",
+      icon: ShieldCheck
+    },
+    {
+      title: "Fetching Medical History",
+      desc: "Discharge summary & diagnoses",
+      icon: FileText
+    },
+    {
+      title: "Syncing Care Team",
+      desc: "Assigned Doctor: Dr. Sarah Jenkins",
+      icon: UserCheck
+    },
+    {
+      title: "Loading Prescriptions",
+      desc: "Active medications & meal plans",
+      icon: Pill
+    },
+    {
+      title: "Hydrating Recovery Status",
+      desc: "14-day streak & daily score",
+      icon: HeartPulse
+    }
   ];
 
   const formatAadhaar = (val: string) => {
-    // Remove non-digit chars
     const digits = val.replace(/\D/g, "").slice(0, 12);
-    // Format as 4-4-4
-    const parts = [];
-    for (let i = 0; i < digits.length; i += 4) {
+    const parts: string[] = [];
+    for (let i = 0; i < digits.length; i += 4)
       parts.push(digits.substring(i, i + 4));
-    }
     return parts.join(" ");
   };
 
-  const handleAadhaarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setError("");
-    setAadhaar(formatAadhaar(e.target.value));
-  };
-
-  const handleDemoFill = () => {
-    setError("");
-    setAadhaar("9876 5432 1098");
-    setDob("1988-05-14");
-  };
-
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    let currentAadhaar = aadhaar;
-    let currentDob = dob;
-
-    if (!currentAadhaar || currentAadhaar.replace(/\s/g, "").length !== 12) {
-      currentAadhaar = "9876 5432 1098";
-      setAadhaar(currentAadhaar);
-    }
-    if (!currentDob) {
-      currentDob = "1988-05-14";
-      setDob(currentDob);
-    }
-
-    const res = await login("patient", { aadhaar: currentAadhaar, dob: currentDob });
-    setLoading(false);
-
-    if (!res.success) {
-      setError(res.error || "Aadhaar verification failed.");
-      return;
-    }
-
+  const runSync = () => {
     setStep(3);
-
-    // Animate data sync steps and then route to /patient
     let current = 0;
     const interval = setInterval(() => {
       current += 1;
@@ -105,105 +92,123 @@ export function PatientAuthForm() {
           window.location.href = "/patient";
         }, 300);
       }
-    }, 350);
+    }, 380);
+  };
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const a = aadhaar || "9876 5432 1098";
+    const d = dob || "1988-05-14";
+    if (!aadhaar) setAadhaar("9876 5432 1098");
+    if (!dob) setDob("1988-05-14");
+    const res = await login("patient", { aadhaar: a, dob: d });
+    setLoading(false);
+    if (!res.success) {
+      setError(res.error || "Verification failed.");
+      return;
+    }
+    runSync();
   };
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
-    const res = await login("patient", { aadhaar: aadhaar || "9876 5432 1098", dob: dob || "1988-05-14" });
+    const res = await login("patient", {
+      aadhaar: aadhaar || "9876 5432 1098",
+      dob: dob || "1988-05-14"
+    });
     setLoading(false);
-
     if (!res.success) {
-      setError(res.error || "Aadhaar verification failed.");
+      setError(res.error || "Verification failed.");
       return;
     }
-
-    setStep(3);
-
-    // Animate data sync steps and then route to /patient
-    let current2 = 0;
-    const interval2 = setInterval(() => {
-      current2 += 1;
-      setSyncIndex(current2);
-      if (current2 >= syncSteps.length) {
-        clearInterval(interval2);
-        setTimeout(() => {
-          window.location.href = "/patient";
-        }, 300);
-      }
-    }, 400);
+    runSync();
   };
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white/80 p-6 shadow-xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80 sm:p-8">
-      {/* Demo Patient Badge */}
-      <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
-        <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/80 dark:text-blue-400">
-            <HeartPulse className="h-4 w-4" />
-          </span>
+    <div
+      className="relative w-full overflow-hidden rounded-2xl p-6 sm:p-8"
+      style={{
+        background: "#111113",
+        border: "1px solid rgba(255,255,255,0.07)",
+        boxShadow:
+          "0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)"
+      }}
+    >
+      {/* Header */}
+      <div className="mb-7 flex items-center justify-between border-b border-white/[0.06] pb-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-recovery/20 bg-recovery/10">
+            <HeartPulse className="h-4 w-4 text-recovery" />
+          </div>
           <div>
-            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Patient Authentication</h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300">Identity verification via Aadhaar</p>
+            <h2 className="text-sm font-semibold text-foreground">
+              Patient Authentication
+            </h2>
+            <p className="text-xs text-text-muted">
+              Identity verified via Aadhaar
+            </p>
           </div>
         </div>
-
         <button
           type="button"
-          onClick={handleDemoFill}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50/80 px-2.5 py-1 text-xs font-semibold text-blue-700 transition-all hover:bg-blue-100 active:scale-95 dark:border-blue-900/50 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/80"
+          onClick={() => {
+            setAadhaar("9876 5432 1098");
+            setDob("1988-05-14");
+            setError("");
+          }}
+          className="transition-apple-fast inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-white/[0.07] hover:text-foreground"
         >
-          <Sparkles className="h-3.5 w-3.5" />
-          Quick Demo Fill
+          <Sparkles className="h-3 w-3" /> Demo
         </button>
       </div>
 
       <AnimatePresence mode="wait">
+        {/* ── Step 1: Credentials ── */}
         {step === 1 && (
           <motion.form
             key="step1"
-            initial={{ opacity: 0, x: -10 }}
+            initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 10 }}
+            exit={{ opacity: 0, x: 12 }}
+            transition={{ duration: 0.22 }}
             onSubmit={handleLoginSubmit}
             className="space-y-5"
           >
             {error && (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
+              <div className="bg-danger/8 rounded-xl border border-danger/20 px-4 py-3 text-xs font-medium text-danger">
                 {error}
               </div>
             )}
 
-            {/* Aadhaar Input */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-text-secondary">
                 Aadhaar Number
               </label>
-              <div className="relative flex items-center">
-                <CreditCard className="absolute left-3.5 h-4 w-4 text-slate-400" />
+              <div className="relative">
+                <CreditCard className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 <input
                   type="text"
                   value={aadhaar}
-                  onChange={handleAadhaarChange}
+                  onChange={(e) => {
+                    setError("");
+                    setAadhaar(formatAadhaar(e.target.value));
+                  }}
                   placeholder="9876 5432 1098"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-4 text-sm tracking-widest text-slate-900 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:focus:border-blue-500 dark:focus:bg-slate-950"
+                  className={`${inputClass} pl-10 font-mono tracking-widest`}
                 />
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                12-digit UIDAI number. Demo token for sandbox authentication.
-              </p>
             </div>
 
-            {/* Date of Birth Input */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-text-secondary">
                 Date of Birth
               </label>
-              <div className="relative flex items-center">
-                <Calendar className="absolute left-3.5 h-4 w-4 text-slate-400" />
+              <div className="relative">
+                <Calendar className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 <input
                   type="date"
                   value={dob}
@@ -211,49 +216,53 @@ export function PatientAuthForm() {
                     setError("");
                     setDob(e.target.value);
                   }}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:focus:border-blue-500 dark:focus:bg-slate-950"
+                  className={`${inputClass} pl-10`}
                 />
               </div>
             </div>
 
-            {/* Instant Login Banner Callout */}
-            <div className="rounded-xl border border-blue-200/80 bg-blue-50/70 p-3.5 dark:border-blue-900/50 dark:bg-blue-950/40">
+            {/* Quick access panel */}
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.025] p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-blue-900 dark:text-blue-200">
-                    Quick Testing Access
+                  <p className="text-xs font-semibold text-foreground">
+                    Quick Demo Access
                   </p>
-                  <p className="text-[11px] text-blue-700/80 dark:text-blue-300/80">
-                    Bypass OTP & enter Patient Portal instantly
+                  <p className="mt-0.5 text-[11px] text-text-muted">
+                    Bypass OTP — enter portal instantly
                   </p>
                 </div>
                 <Button
                   type="button"
                   size="sm"
+                  variant="recovery"
                   onClick={handleLoginSubmit}
                   disabled={loading}
-                  className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20"
+                  className="text-xs"
                 >
-                  {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "1-Click Login"}
+                  {loading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    "1-Click Login"
+                  )}
                 </Button>
               </div>
             </div>
 
-            {/* Remember & Forgot options */}
             <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
+              <label className="flex cursor-pointer items-center gap-2 text-text-secondary">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800"
+                  className="h-3.5 w-3.5 rounded border-white/20 bg-white/[0.05] accent-recovery"
                 />
                 Remember this device
               </label>
               <button
                 type="button"
                 onClick={() => setForgotModal(true)}
-                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                className="transition-apple-fast text-text-muted hover:text-foreground"
               >
                 Forgot Aadhaar?
               </button>
@@ -262,47 +271,47 @@ export function PatientAuthForm() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:bg-blue-700 active:scale-98 dark:bg-blue-600 dark:hover:bg-blue-500"
+              className="w-full"
+              size="lg"
             >
               {loading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Authenticating Patient...
-                </div>
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Authenticating…
+                </>
               ) : (
-                <div className="flex items-center justify-center gap-2">
-                  Login to Patient Portal
-                  <ChevronRight className="h-4 w-4" />
-                </div>
+                <>
+                  Login to Patient Portal <ChevronRight className="h-4 w-4" />
+                </>
               )}
             </Button>
           </motion.form>
         )}
 
+        {/* ── Step 2: OTP ── */}
         {step === 2 && (
           <motion.form
             key="step2"
-            initial={{ opacity: 0, x: 10 }}
+            initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
+            exit={{ opacity: 0, x: -12 }}
+            transition={{ duration: 0.22 }}
             onSubmit={handleOtpSubmit}
             className="space-y-6"
           >
-            <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 dark:border-blue-900/40 dark:bg-blue-950/30">
-              <div className="flex items-center gap-2 text-xs font-semibold text-blue-800 dark:text-blue-300">
-                <Lock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                OTP sent to linked mobile ending in •••• 8492
-              </div>
-              <p className="mt-1 text-xs text-blue-600/80 dark:text-blue-300/80">
-                Aadhaar Token: <span className="font-mono">{aadhaar}</span>
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4">
+              <p className="text-xs font-medium text-foreground">
+                OTP sent to mobile ••••8492
+              </p>
+              <p className="mt-0.5 font-mono text-[11px] text-text-muted">
+                {aadhaar}
               </p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Enter 6-Digit OTP
+              <label className="text-xs font-medium text-text-secondary">
+                6-Digit OTP
               </label>
-              <div className="flex justify-between gap-2">
+              <div className="flex gap-2">
                 {otp.map((digit, idx) => (
                   <input
                     key={idx}
@@ -314,104 +323,118 @@ export function PatientAuthForm() {
                       next[idx] = e.target.value.slice(-1);
                       setOtp(next);
                     }}
-                    className="h-12 w-11 rounded-xl border border-slate-200 bg-slate-50 text-center font-mono text-lg font-bold text-slate-900 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                    className="transition-apple-fast h-12 w-full rounded-xl border border-white/[0.09] bg-white/[0.04] text-center font-mono text-lg font-bold text-foreground outline-none focus:border-white/[0.20] focus:bg-white/[0.07]"
                   />
                 ))}
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                Demo passcode auto-filled. Click Verify to complete login.
-              </p>
             </div>
 
             <div className="flex items-center justify-between text-xs">
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                className="transition-apple-fast text-text-muted hover:text-foreground"
               >
-                ← Back to Aadhaar
+                ← Back
               </button>
               <button
                 type="button"
-                className="flex items-center gap-1 font-semibold text-blue-600 hover:underline dark:text-blue-400"
+                className="transition-apple-fast flex items-center gap-1 text-text-secondary hover:text-foreground"
               >
-                <RefreshCw className="h-3 w-3" />
-                Resend OTP in 24s
+                <RefreshCw className="h-3 w-3" /> Resend in 24s
               </button>
             </div>
 
             <Button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 active:scale-98"
+              className="w-full"
+              size="lg"
             >
               {loading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Verifying OTP...
-                </div>
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Verifying…
+                </>
               ) : (
-                <div className="flex items-center justify-center gap-2">
-                  Authenticate & Launch Portal
-                  <CheckCircle2 className="h-4 w-4" />
-                </div>
+                <>
+                  <CheckCircle2 className="h-4 w-4" /> Authenticate & Enter
+                </>
               )}
             </Button>
           </motion.form>
         )}
 
+        {/* ── Step 3: Data sync ── */}
         {step === 3 && (
           <motion.div
             key="step3"
-            initial={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="space-y-6 py-2"
+            transition={{ duration: 0.25 }}
+            className="space-y-5"
           >
             <div className="text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
-                <Loader2 className="h-6 w-6 animate-spin" />
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-recovery/20 bg-recovery/10">
+                <Loader2 className="h-5 w-5 animate-spin text-recovery" />
               </div>
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                Preparing Patient Care Portal
+              <h3 className="text-sm font-semibold text-foreground">
+                Preparing your portal
               </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300">
-                Fetching medical records & active care plan...
+              <p className="mt-1 text-xs text-text-muted">
+                Fetching medical records & care plan…
               </p>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {syncSteps.map((s, idx) => {
                 const Icon = s.icon;
                 const isDone = idx < syncIndex;
                 const isCurrent = idx === syncIndex;
 
                 return (
-                  <div
+                  <motion.div
                     key={s.title}
-                    className={`flex items-center gap-3 rounded-xl border p-3 transition-all ${
-                      isDone
-                        ? "border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/40 dark:bg-emerald-950/20"
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: isCurrent || isDone ? 1 : 0.3, x: 0 }}
+                    transition={{ delay: idx * 0.04 }}
+                    className="transition-apple-fast flex items-center gap-3 rounded-xl p-3"
+                    style={{
+                      background: isDone
+                        ? "rgba(52,211,153,0.06)"
                         : isCurrent
-                        ? "border-blue-300 bg-blue-50/80 shadow-sm dark:border-blue-800 dark:bg-blue-950/40"
-                        : "border-slate-100 bg-slate-50/40 opacity-40 dark:border-slate-800/50 dark:bg-slate-900/20"
-                    }`}
+                          ? "rgba(255,255,255,0.04)"
+                          : "transparent",
+                      border: `1px solid ${isDone ? "rgba(52,211,153,0.15)" : isCurrent ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)"}`
+                    }}
                   >
                     <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold ${
-                        isDone
-                          ? "bg-emerald-500 text-white"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                      style={{
+                        background: isDone
+                          ? "rgba(52,211,153,0.15)"
                           : isCurrent
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                      }`}
+                            ? "rgba(255,255,255,0.08)"
+                            : "rgba(255,255,255,0.03)",
+                        color: isDone
+                          ? "#34D399"
+                          : isCurrent
+                            ? "#FAFAFA"
+                            : "#71717A"
+                      }}
                     >
-                      {isDone ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                      {isDone ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <Icon className="h-4 w-4" />
+                      )}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-slate-900 dark:text-white">{s.title}</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{s.desc}</p>
+                    <div>
+                      <p className="text-xs font-medium text-foreground">
+                        {s.title}
+                      </p>
+                      <p className="text-[11px] text-text-muted">{s.desc}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
@@ -419,35 +442,55 @@ export function PatientAuthForm() {
         )}
       </AnimatePresence>
 
-      {/* Forgot Aadhaar Modal */}
+      {/* Forgot modal */}
       {forgotModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center gap-2 text-slate-900 dark:text-white">
-              <HelpCircle className="h-5 w-5 text-blue-600" />
-              <h3 className="text-base font-semibold">Forgot Aadhaar Number?</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full max-w-sm space-y-4 rounded-2xl p-6"
+            style={{
+              background: "#18181B",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.8)"
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <HelpCircle className="h-4 w-4 text-text-muted" />
+              <h3 className="text-sm font-semibold text-foreground">
+                Forgot Aadhaar?
+              </h3>
             </div>
-            <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              In production, patients can retrieve their linked ID via registered mobile SMS or hospital registration card. For this demo, use:
+            <p className="text-xs leading-relaxed text-text-secondary">
+              Use your registered mobile or hospital registration card. Demo
+              credentials:
             </p>
-            <div className="mt-3 rounded-lg bg-slate-100 p-3 font-mono text-xs text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-              Demo Aadhaar: 9876 5432 1098
+            <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-3 font-mono text-xs text-text-secondary">
+              Aadhaar: 9876 5432 1098
               <br />
               DOB: 1988-05-14
             </div>
-            <div className="mt-5 flex justify-end">
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setForgotModal(false)}
+              >
+                Cancel
+              </Button>
               <Button
                 size="sm"
+                variant="secondary"
                 onClick={() => {
-                  handleDemoFill();
+                  setAadhaar("9876 5432 1098");
+                  setDob("1988-05-14");
                   setForgotModal(false);
                 }}
-                className="rounded-lg bg-blue-600 text-white"
               >
-                Auto-fill Demo Aadhaar
+                Auto-fill
               </Button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

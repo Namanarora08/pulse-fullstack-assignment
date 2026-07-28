@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CardDeckCheckin, AnswerState, QuestionItem } from "@/components/healthcare/card-deck-checkin";
+import {
+  CardDeckCheckin,
+  AnswerState,
+  QuestionItem
+} from "@/components/healthcare/card-deck-checkin";
 import { RoleShell } from "@/components/layout/role-shell";
 import { LoadingSkeletons } from "@/components/layout/loading-skeletons";
 import { useAuth } from "@/components/auth/auth-context";
@@ -11,7 +15,9 @@ import { safeFetchJson } from "@/lib/api-client";
 export default function PatientCheckInPage() {
   const { updatePatientData } = useAuth();
   const [questions, setQuestions] = useState<QuestionItem[]>([]);
-  const [draftAnswers, setDraftAnswers] = useState<Record<string, AnswerState>>({});
+  const [draftAnswers, setDraftAnswers] = useState<Record<string, AnswerState>>(
+    {}
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,13 +25,23 @@ export default function PatientCheckInPage() {
     async function loadQuestionsAndDraft() {
       try {
         setLoading(true);
-        const res = await safeFetchJson<{ data?: QuestionItem[] }>("/api/patient/checklist");
+        const res = await safeFetchJson<{ data?: QuestionItem[] }>(
+          "/api/patient/checklist"
+        );
         const qList: QuestionItem[] = res.data?.data || [];
         setQuestions(qList);
 
         // Fetch existing draft answers if present
-        type DraftAnswerItem = { questionId: string; scaleValue?: number; booleanValue?: boolean; numericValue?: number; skipped?: boolean };
-        const draftRes = await safeFetchJson<{ data?: { answers?: DraftAnswerItem[] } }>("/api/patient/checkin");
+        type DraftAnswerItem = {
+          questionId: string;
+          scaleValue?: number;
+          booleanValue?: boolean;
+          numericValue?: number;
+          skipped?: boolean;
+        };
+        const draftRes = await safeFetchJson<{
+          data?: { answers?: DraftAnswerItem[] };
+        }>("/api/patient/checkin");
         if (draftRes.ok && draftRes.data?.data?.answers) {
           const initialMap: Record<string, AnswerState> = {};
           draftRes.data.data.answers.forEach((ans) => {
@@ -34,7 +50,7 @@ export default function PatientCheckInPage() {
               scaleValue: ans.scaleValue ?? null,
               booleanValue: ans.booleanValue ?? null,
               numericValue: ans.numericValue ?? null,
-              skipped: ans.skipped ?? false,
+              skipped: ans.skipped ?? false
             };
           });
           setDraftAnswers(initialMap);
@@ -51,35 +67,70 @@ export default function PatientCheckInPage() {
   }, []);
 
   const handleDeckComplete = async (submittedAnswers: AnswerState[]) => {
-    setError(null);
-    const response = await safeFetchJson("/api/patient/checkin/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        patientId: "demo",
-        answers: submittedAnswers,
-      }),
-    });
+    try {
+      setError(null);
+      const response = await safeFetchJson("/api/patient/checkin/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patientId: "demo",
+          answers: submittedAnswers
+        })
+      });
 
-    if (!response.ok) {
-      throw new Error(response.error || "Failed to submit check-in response.");
+      if (!response.ok) {
+        setError(response.error || "Failed to submit check-in response.");
+        return;
+      }
+
+      // Live update patient session state
+      updatePatientData((prev) => ({
+        ...prev,
+        recoveryStatus: {
+          ...prev.recoveryStatus,
+          checkInStatus: "Completed",
+          lastCheckIn:
+            "Today at " +
+            new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit"
+            }),
+          streakDays: (prev.recoveryStatus?.streakDays || 14) + 1,
+          completionScore: Math.min(
+            100,
+            (prev.recoveryStatus?.completionScore || 92) + 2
+          )
+        },
+        badgeInfo: {
+          ...prev.badgeInfo,
+          points: (prev.badgeInfo?.points || 840) + 20
+        },
+        previousCheckIns: [
+          {
+            date: new Date().toISOString().split("T")[0],
+            completed: true,
+            symptomsLogged: submittedAnswers
+              .filter((a) => a.questionId?.includes("symptom"))
+              .map((a) =>
+                a.scaleValue
+                  ? `Rating: ${a.scaleValue}`
+                  : a.booleanValue
+                    ? "Yes"
+                    : "No"
+              ),
+            painScale:
+              submittedAnswers.find((a) => a.questionId?.includes("pain"))
+                ?.scaleValue || 0,
+            notes: "Submitted via daily check-in"
+          },
+          ...(prev.previousCheckIns || [])
+        ]
+      }));
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Failed to submit check-in";
+      setError(msg);
     }
-
-    // Live update patient session state
-    updatePatientData((prev) => ({
-      ...prev,
-      recoveryStatus: {
-        ...prev.recoveryStatus,
-        checkInStatus: "Completed",
-        lastCheckIn: "Today at " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        streakDays: (prev.recoveryStatus?.streakDays || 14) + 1,
-        completionScore: Math.min(100, (prev.recoveryStatus?.completionScore || 92) + 2),
-      },
-      badgeInfo: {
-        ...prev.badgeInfo,
-        points: (prev.badgeInfo?.points || 840) + 20,
-      },
-    }));
   };
 
   return (
@@ -111,4 +162,3 @@ export default function PatientCheckInPage() {
     </RoleShell>
   );
 }
-

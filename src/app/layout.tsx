@@ -8,25 +8,29 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
+  weight: ["300", "400", "500", "600", "700", "800", "900"]
 });
 
 export const metadata: Metadata = {
-  title: "Pulse Health Gateway",
-  description: "Production-ready healthcare post-discharge care portal",
+  title: "Pulse — Clinical Recovery Platform",
+  description:
+    "Post-discharge intelligence platform for patients, doctors, and hospital administrators."
 };
 
 export default function RootLayout({
-  children,
+  children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="font-sans antialiased bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 selection:bg-blue-500/20 selection:text-blue-600">
+    <html
+      lang="en"
+      className={`${inter.variable} dark`}
+      suppressHydrationWarning
+    >
+      <body className="bg-background font-sans text-foreground antialiased">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
 }
-
-

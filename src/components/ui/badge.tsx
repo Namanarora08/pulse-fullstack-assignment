@@ -1,34 +1,41 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-tight transition-colors",
+  "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-tight transition-apple-fast",
   {
     variants: {
       variant: {
-        default: "border-blue-200/80 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/60 dark:text-blue-300",
-        secondary: "border-slate-200/80 bg-slate-100 text-slate-700 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-300",
-        outline: "border-slate-200/80 bg-white text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200",
-        success: "border-emerald-200/80 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/60 dark:text-emerald-300",
-        warning: "border-amber-200/80 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/60 dark:text-amber-300",
-        danger: "border-rose-200/80 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/60 dark:text-rose-300"
+        default:
+          "bg-white/[0.08]  border border-white/[0.10] text-text-primary",
+        secondary:
+          "bg-white/[0.05]  border border-white/[0.07] text-text-secondary",
+        recovery: "bg-recovery/10   border border-recovery/20  text-recovery",
+        heart: "bg-heart/10      border border-heart/20     text-heart",
+        medication:
+          "bg-medication/10 border border-medication/20 text-medication",
+        sleep: "bg-sleep/10      border border-sleep/20     text-sleep",
+        hydration: "bg-hydration/10  border border-hydration/20 text-hydration",
+        warning: "bg-warning/10    border border-warning/20   text-warning",
+        danger: "bg-danger/10     border border-danger/20    text-danger",
+        outline:
+          "border border-white/[0.10] bg-transparent   text-text-primary",
+        ghost: "border-transparent bg-white/[0.04]          text-text-muted",
+        success: "bg-recovery/10   border border-recovery/20  text-recovery"
       }
     },
-    defaultVariants: {
-      variant: "default"
-    }
+    defaultVariants: { variant: "default" }
   }
 );
 
 export interface BadgeProps
   extends
-    React.HTMLAttributes<HTMLDivElement>,
+    React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof badgeVariants> {}
 
 export function Badge({ className, variant, ...props }: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <span className={cn(badgeVariants({ variant }), className)} {...props} />
   );
 }

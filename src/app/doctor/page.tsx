@@ -1,84 +1,245 @@
 "use client";
 
+import { motion } from "framer-motion";
 import {
-  Activity,
-  ClipboardList,
-  LayoutDashboard,
   Sparkles,
-  Stethoscope,
-  UsersRound,
+  Users,
+  Activity,
+  AlertTriangle,
+  TrendingUp,
+  ArrowRight,
+  Clock,
+  HeartPulse
 } from "lucide-react";
 import { RoleShell } from "@/components/layout/role-shell";
-
-const doctorNavItems = [
-  { href: "/doctor", label: "Overview", icon: LayoutDashboard },
-  { href: "/doctor/patients", label: "Patient Queue", icon: UsersRound, badge: "4 Review" },
-  { href: "/doctor/questions", label: "Question Engine", icon: ClipboardList },
-  { href: "/doctor/analytics", label: "Recovery Trends", icon: Activity },
-];
+import { doctorNavItems } from "@/lib/doctor-nav";
+import { GlassCard } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 export default function DoctorPage() {
   return (
     <RoleShell
       role="doctor"
-      title="Doctor Dashboard Coming Next"
-      description="Clinical overview workspace. Ready for patient review queues, risk analysis, and question template customization."
+      title="Clinical Dashboard"
+      description="Monitor patient recovery trends, risk alerts, and daily check-in submissions."
       navItems={doctorNavItems}
     >
       <div className="space-y-6">
-        {/* Clean Hero Banner */}
-        <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="relative z-10 space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/60 dark:text-emerald-300">
-              <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-              Doctor Workspace Active
+        {/* Hero Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+          className="glass-panel relative overflow-hidden p-6 sm:p-8"
+        >
+          <div className="space-y-4">
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 rounded-full border border-recovery/30 bg-recovery/10 px-3 py-1 text-xs font-semibold text-recovery"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-recovery" />
+              Cardiology Panel Active
+            </motion.div>
+            <div className="space-y-1">
+              <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+                Welcome, Dr. Sarah Jenkins
+              </h2>
+              <p className="max-w-xl text-sm leading-relaxed text-text-secondary">
+                Review daily patient submissions, assess clinical recovery
+                scores, and manage question templates for your cardiology panel.
+              </p>
             </div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
-              Welcome, Dr. Sarah Jenkins
-            </h2>
-            <p className="max-w-xl text-xs leading-relaxed text-slate-500 dark:text-slate-400 sm:text-sm">
-              Review daily patient submissions, assess clinical recovery scores, and manage question templates for your cardiology panel.
-            </p>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Clinical Stats Preview */}
+        {/* Clinical Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-5 shadow-sm backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80">
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Assigned Patients</p>
-            <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">28</p>
-            <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">Cardiology & Post-Surgical</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <GlassCard className="transition-apple p-5 hover:shadow-premium-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-text-secondary">
+                  Assigned Patients
+                </p>
+                <div className="rounded-xl bg-medication/20 p-2 text-medication">
+                  <Users className="h-4 w-4" />
+                </div>
+              </div>
+              <p className="mt-3 text-2xl font-extrabold text-foreground">28</p>
+              <p className="mt-1 text-[11px] font-medium text-recovery">
+                Cardiology & Post-Surgical
+              </p>
+            </GlassCard>
+          </motion.div>
 
-          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-5 shadow-sm backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80">
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Today&apos;s Check-ins</p>
-            <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">22 / 28</p>
-            <p className="mt-1 text-[11px] text-blue-600 dark:text-blue-400">78.5% submission rate</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+          >
+            <GlassCard className="transition-apple p-5 hover:shadow-premium-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-text-secondary">
+                  Today&apos;s Check-ins
+                </p>
+                <div className="rounded-xl bg-sleep/20 p-2 text-sleep">
+                  <Activity className="h-4 w-4" />
+                </div>
+              </div>
+              <p className="mt-3 text-2xl font-extrabold text-foreground">
+                22 / 28
+              </p>
+              <p className="mt-1 text-[11px] font-medium text-primary">
+                78.5% submission rate
+              </p>
+            </GlassCard>
+          </motion.div>
 
-          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-5 shadow-sm backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80">
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">High Risk Alerts</p>
-            <p className="mt-2 text-2xl font-extrabold text-amber-600 dark:text-amber-400">1</p>
-            <p className="mt-1 text-[11px] text-amber-600 dark:text-amber-400">Requires follow-up review</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <GlassCard className="transition-apple p-5 hover:shadow-premium-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-text-secondary">
+                  High Risk Alerts
+                </p>
+                <div className="rounded-xl bg-warning/20 p-2 text-warning">
+                  <AlertTriangle className="h-4 w-4" />
+                </div>
+              </div>
+              <p className="mt-3 text-2xl font-extrabold text-warning">1</p>
+              <p className="mt-1 text-[11px] font-medium text-warning">
+                Requires follow-up review
+              </p>
+            </GlassCard>
+          </motion.div>
 
-          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-5 shadow-sm backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80">
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Avg Panel Adherence</p>
-            <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">94.2%</p>
-            <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">High engagement</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+          >
+            <GlassCard className="transition-apple p-5 hover:shadow-premium-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-text-secondary">
+                  Avg Panel Adherence
+                </p>
+                <div className="rounded-xl bg-recovery/20 p-2 text-recovery">
+                  <TrendingUp className="h-4 w-4" />
+                </div>
+              </div>
+              <p className="mt-3 text-2xl font-extrabold text-foreground">
+                94.2%
+              </p>
+              <p className="mt-1 text-[11px] font-medium text-success">
+                High engagement
+              </p>
+            </GlassCard>
+          </motion.div>
         </div>
 
-        {/* Integration Slot */}
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-100/50 p-8 text-center dark:border-slate-800 dark:bg-slate-900/30">
-          <Stethoscope className="mx-auto h-8 w-8 text-emerald-600 dark:text-emerald-400" />
-          <h3 className="mt-3 text-sm font-bold text-slate-700 dark:text-slate-300">
-            Doctor Clinical Summary & Patient Queue Module Slot
-          </h3>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            This workspace area is reserved for clinical summaries, upcoming follow-ups, and interactive patient questionnaires.
-          </p>
-        </div>
+        {/* Pending Reviews Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="glass-panel p-6"
+        >
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-heart/20 p-2 text-heart">
+                <HeartPulse className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-foreground">
+                  Pending Reviews
+                </h3>
+                <p className="text-[11px] text-text-secondary">
+                  6 patients awaiting clinical review
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/doctor/patients"
+              className="transition-apple-fast flex items-center gap-1 text-xs font-semibold text-recovery hover:text-recovery/80"
+            >
+              View All <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              {
+                name: "Rahul Sharma",
+                condition: "Post-Coronary Stent",
+                status: "Deteriorating",
+                time: "2h ago"
+              },
+              {
+                name: "Avery Chen",
+                condition: "Hypertension Management",
+                status: "Stable",
+                time: "4h ago"
+              },
+              {
+                name: "Jordan Lee",
+                condition: "Cardiac Rehabilitation",
+                status: "Improving",
+                time: "5h ago"
+              }
+            ].map((patient, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 + idx * 0.05 }}
+                whileHover={{ scale: 1.01 }}
+                className="transition-apple flex cursor-pointer items-center justify-between rounded-xl border border-border/50 bg-background-elevated/30 p-3 hover:bg-background-elevated/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-recovery to-medication text-xs font-bold text-background shadow-premium-md">
+                    {patient.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-foreground">
+                      {patient.name}
+                    </p>
+                    <p className="text-[10px] text-text-secondary">
+                      {patient.condition}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge
+                    variant={
+                      patient.status === "Deteriorating"
+                        ? "danger"
+                        : patient.status === "Improving"
+                          ? "recovery"
+                          : "default"
+                    }
+                  >
+                    {patient.status}
+                  </Badge>
+                  <span className="flex items-center gap-1 text-[10px] text-text-secondary">
+                    <Clock className="h-3 w-3" /> {patient.time}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </RoleShell>
   );

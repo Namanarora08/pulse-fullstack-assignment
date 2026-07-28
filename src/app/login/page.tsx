@@ -4,14 +4,24 @@ import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, ArrowLeft, HeartPulse, Shield, Stethoscope } from "lucide-react";
+import { Activity, ArrowLeft, HeartPulse, Stethoscope } from "lucide-react";
 
 import { AnimatedBackground } from "@/components/auth/animated-background";
 import { PatientAuthForm } from "@/components/auth/patient-auth-form";
 import { DoctorAuthForm } from "@/components/auth/doctor-auth-form";
 import { AdminAuthForm } from "@/components/auth/admin-auth-form";
 import { RoleType } from "@/components/auth/role-selection-cards";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+
+const roles: {
+  id: RoleType;
+  label: string;
+  icon: typeof HeartPulse;
+  accent: string;
+}[] = [
+  { id: "patient", label: "Patient", icon: HeartPulse, accent: "#34D399" },
+  { id: "doctor", label: "Doctor", icon: Stethoscope, accent: "#818CF8" },
+  { id: "admin", label: "Admin", icon: Activity, accent: "#A1A1AA" }
+];
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -20,117 +30,148 @@ function LoginContent() {
 
   useEffect(() => {
     const r = searchParams.get("role") as RoleType;
-    if (r && ["patient", "doctor", "admin"].includes(r)) {
-      setActiveRole(r);
-    }
+    if (r && ["patient", "doctor", "admin"].includes(r)) setActiveRole(r);
   }, [searchParams]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const activeAccent =
+    roles.find((r) => r.id === activeRole)?.accent ?? "#34D399";
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _activeAccent = activeAccent;
+
   return (
-    <div className="relative min-h-screen w-full flex flex-col justify-between overflow-x-hidden bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
+    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background text-foreground">
       <AnimatedBackground />
 
-      {/* Top Header */}
-      <header className="relative z-40 w-full border-b border-slate-200/60 bg-white/70 backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-950/70">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-2 font-bold tracking-tight text-slate-900 dark:text-white hover:opacity-80 transition-opacity">
-            <ArrowLeft className="h-4 w-4 text-slate-500" />
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md">
-              <Activity className="h-4 w-4" />
-            </span>
-            <span className="text-lg">Pulse <span className="text-xs font-normal text-blue-600 dark:text-blue-400">Portal</span></span>
+      {/* ── Header ── */}
+      <header
+        className="glass relative z-40 w-full"
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <div className="mx-auto flex h-14 max-w-xl items-center justify-between px-6">
+          <Link
+            href="/"
+            className="transition-apple-fast flex items-center gap-2 text-text-muted hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-recovery/20 bg-recovery/10">
+              <Activity className="h-3.5 w-3.5 text-recovery" />
+            </div>
+            <span className="text-sm font-semibold text-foreground">Pulse</span>
           </Link>
-
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-          </div>
+          <span className="hidden text-xs text-text-muted sm:block">
+            Clinical Portal Access
+          </span>
         </div>
       </header>
 
-      {/* Main Authentication Container */}
-      <main className="relative z-10 my-auto mx-auto w-full max-w-xl px-4 py-8 sm:px-6">
-        {/* Role Selection Segmented Control */}
-        <div className="mb-6 flex rounded-2xl border border-slate-200/80 bg-white/80 p-1.5 shadow-md backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80">
-          <button
-            type="button"
-            onClick={() => setActiveRole("patient")}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition-all ${
-              activeRole === "patient"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-500/25"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            <HeartPulse className="h-4 w-4" />
-            Patient
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveRole("doctor")}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition-all ${
-              activeRole === "doctor"
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            <Stethoscope className="h-4 w-4" />
-            Doctor
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveRole("admin")}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition-all ${
-              activeRole === "admin"
-                ? "bg-slate-900 text-white shadow-md dark:bg-slate-100 dark:text-slate-900"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            <Shield className="h-4 w-4" />
-            Admin
-          </button>
-        </div>
+      {/* ── Main ── */}
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
+          className="w-full max-w-md space-y-5"
+        >
+          {/* Page title */}
+          <div className="space-y-1 pb-1 text-center">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Welcome back
+            </h1>
+            <p className="text-sm text-text-muted">
+              Sign in to your Pulse portal
+            </p>
+          </div>
 
-        {/* Animated Form Container */}
-        <AnimatePresence mode="wait">
-          {activeRole === "patient" && (
-            <motion.div
-              key="patient-form"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.25 }}
-            >
-              <PatientAuthForm />
-            </motion.div>
-          )}
+          {/* ── Role tab switcher ── */}
+          <div
+            className="flex gap-1 rounded-2xl p-1"
+            style={{
+              background: "#111113",
+              border: "1px solid rgba(255,255,255,0.07)"
+            }}
+          >
+            {roles.map((r) => {
+              const Icon = r.icon;
+              const active = activeRole === r.id;
+              return (
+                <motion.button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setActiveRole(r.id)}
+                  whileTap={{ scale: 0.97 }}
+                  className="transition-apple-fast relative flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-medium"
+                  style={{
+                    color: active ? r.accent : "#71717A"
+                  }}
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="role-tab-bg"
+                      className="absolute inset-0 rounded-xl"
+                      style={{
+                        background: `${r.accent}10`,
+                        border: `1px solid ${r.accent}25`
+                      }}
+                      transition={{
+                        type: "spring",
+                        bounce: 0.18,
+                        duration: 0.45
+                      }}
+                    />
+                  )}
+                  <Icon className="relative h-3.5 w-3.5" />
+                  <span className="relative">{r.label}</span>
+                </motion.button>
+              );
+            })}
+          </div>
 
-          {activeRole === "doctor" && (
-            <motion.div
-              key="doctor-form"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.25 }}
-            >
-              <DoctorAuthForm />
-            </motion.div>
-          )}
-
-          {activeRole === "admin" && (
-            <motion.div
-              key="admin-form"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.25 }}
-            >
-              <AdminAuthForm />
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* ── Animated form container ── */}
+          <AnimatePresence mode="wait">
+            {activeRole === "patient" && (
+              <motion.div
+                key="patient"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.22 }}
+              >
+                <PatientAuthForm />
+              </motion.div>
+            )}
+            {activeRole === "doctor" && (
+              <motion.div
+                key="doctor"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.22 }}
+              >
+                <DoctorAuthForm />
+              </motion.div>
+            )}
+            {activeRole === "admin" && (
+              <motion.div
+                key="admin"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.22 }}
+              >
+                <AdminAuthForm />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-slate-200/60 bg-white/40 py-4 text-center text-xs text-slate-500 backdrop-blur-md dark:border-slate-800/60 dark:bg-slate-950/40 dark:text-slate-400">
-        <p>© 2026 Pulse Healthcare Systems • HIPAA & NABH Compliant Clinical Gateway</p>
+      {/* ── Footer ── */}
+      <footer
+        className="relative z-10 py-5 text-center text-xs text-text-muted"
+        style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
+      >
+        © 2026 Pulse Healthcare Systems · HIPAA & NABH Compliant
       </footer>
     </div>
   );
@@ -138,11 +179,13 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="text-center text-sm font-medium text-slate-500">Loading Portal...</div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="text-xs text-text-muted">Loading…</div>
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
   );

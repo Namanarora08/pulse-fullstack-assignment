@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   AuthSession,
+  FullSession,
   DEMO_ADMIN,
   DEMO_DOCTORS,
   DEMO_PATIENTS,
-  SESSION_COOKIE_NAME,
+  SESSION_COOKIE_NAME
 } from "@/lib/auth";
+
+// In-memory session storage for demo (would be DB in production)
+const sessionStore = new Map<string, FullSession>();
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,14 +23,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let sessionPayload: AuthSession | null = null;
+    let fullSession: FullSession | null = null;
 
     // -----------------------------------------------------------------------
     // PATIENT AUTHENTICATION
     // -----------------------------------------------------------------------
     if (role === "patient") {
       let sanitizedAadhaar = (aadhaar || "").replace(/\s/g, "");
-      if (sanitizedAadhaar.length !== 12 || !/^\d{12}$/.test(sanitizedAadhaar)) {
+      if (
+        sanitizedAadhaar.length !== 12 ||
+        !/^\d{12}$/.test(sanitizedAadhaar)
+      ) {
         // Fall back to demo patient Aadhaar if empty or improperly formatted
         sanitizedAadhaar = "987654321098";
       }
@@ -43,16 +50,28 @@ export async function POST(req: NextRequest) {
           ...DEMO_PATIENTS[0],
           id: `pat-${sanitizedAadhaar.slice(-5)}`,
           aadhaar: formattedAadhaar,
-          dob: dob || DEMO_PATIENTS[0].dob,
+          dob: dob || DEMO_PATIENTS[0].dob
         };
       }
 
-      sessionPayload = {
+      const sessionId = `sess-pat-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+      const token = `pat-tok-${Date.now()}`;
+      const authenticatedAt = new Date().toISOString();
+      const expiresAt = new Date(
+        Date.now() + 60 * 60 * 24 * 7 * 1000
+      ).toISOString(); // 7 days
+
+      fullSession = {
+        sessionId,
         role: "patient",
         user: patient,
-        token: `pat-tok-${Date.now()}`,
-        authenticatedAt: new Date().toISOString(),
+        token,
+        authenticatedAt,
+        expiresAt
       };
+
+      // Store full session in memory
+      sessionStore.set(sessionId, fullSession);
     }
 
     // -----------------------------------------------------------------------
@@ -61,7 +80,10 @@ export async function POST(req: NextRequest) {
     else if (role === "doctor") {
       if (!email || !password) {
         return NextResponse.json(
-          { success: false, error: "Please enter hospital email and password." },
+          {
+            success: false,
+            error: "Please enter hospital email and password."
+          },
           { status: 400 }
         );
       }
@@ -79,16 +101,28 @@ export async function POST(req: NextRequest) {
           title: "Attending Specialist",
           department: "Cardiology",
           hospital: "St. Jude Heart Institute",
-          assignedPatientIds: ["pat-rahul-88201"],
+          assignedPatientIds: ["pat-rahul-88201"]
         };
       }
 
-      sessionPayload = {
+      const sessionId = `sess-doc-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+      const token = `doc-tok-${Date.now()}`;
+      const authenticatedAt = new Date().toISOString();
+      const expiresAt = new Date(
+        Date.now() + 60 * 60 * 24 * 7 * 1000
+      ).toISOString(); // 7 days
+
+      fullSession = {
+        sessionId,
         role: "doctor",
         user: doctor,
-        token: `doc-tok-${Date.now()}`,
-        authenticatedAt: new Date().toISOString(),
+        token,
+        authenticatedAt,
+        expiresAt
       };
+
+      // Store full session in memory
+      sessionStore.set(sessionId, fullSession);
     }
 
     // -----------------------------------------------------------------------
@@ -99,52 +133,78 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            error: "Please enter Admin ID, Password, and Hospital Code.",
+            error: "Please enter Admin ID, Password, and Hospital Code."
           },
           { status: 400 }
         );
       }
 
-      sessionPayload = {
+      const sessionId = `sess-adm-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+      const token = `adm-tok-${Date.now()}`;
+      const authenticatedAt = new Date().toISOString();
+      const expiresAt = new Date(
+        Date.now() + 60 * 60 * 24 * 7 * 1000
+      ).toISOString(); // 7 days
+
+      fullSession = {
+        sessionId,
         role: "admin",
         user: {
           ...DEMO_ADMIN,
           email: adminId,
-          hospitalCode: hospitalCode,
+          hospitalCode: hospitalCode
         },
-        token: `adm-tok-${Date.now()}`,
-        authenticatedAt: new Date().toISOString(),
+        token,
+        authenticatedAt,
+        expiresAt
       };
+
+      // Store full session in memory
+      sessionStore.set(sessionId, fullSession);
     }
 
-    if (!sessionPayload) {
+    if (!fullSession) {
       return NextResponse.json(
         { success: false, error: "Authentication failed." },
         { status: 401 }
       );
     }
 
+    // Create minimal session for cookie
+    const minimalSession: AuthSession = {
+      sessionId: fullSession.sessionId,
+      role: fullSession.role,
+      token: fullSession.token,
+      authenticatedAt: fullSession.authenticatedAt,
+      expiresAt: fullSession.expiresAt
+    };
+
     const response = NextResponse.json({
       success: true,
-      session: sessionPayload,
+      session: fullSession // Return full session in response body for client
     });
 
-    // Set HTTP Cookie for server/middleware session persistence
+    // Set minimal HTTP Cookie for server/middleware session persistence
     response.cookies.set({
       name: SESSION_COOKIE_NAME,
-      value: encodeURIComponent(JSON.stringify(sessionPayload)),
-      httpOnly: false, // Accessible client-side & server-side
+      value: encodeURIComponent(JSON.stringify(minimalSession)),
+      httpOnly: true, // Server-side only for middleware security
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7 days
       sameSite: "lax",
+      secure: process.env.NODE_ENV === "production"
     });
 
     return response;
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Internal server error";
+    const message =
+      err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 }
     );
   }
 }
+
+// Export session store for other API routes to access
+export { sessionStore };

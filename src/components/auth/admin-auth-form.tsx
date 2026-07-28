@@ -12,13 +12,16 @@ import {
   Lock,
   Mail,
   Shield,
-  Sparkles,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/auth-context";
+import { useRouter } from "next/navigation";
 
 export function AdminAuthForm() {
   const { login } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const router = useRouter();
 
   const [adminId, setAdminId] = useState("");
   const [password, setPassword] = useState("");
@@ -50,7 +53,7 @@ export function AdminAuthForm() {
     const res = await login("admin", {
       adminId: loginAdminId,
       password: loginPassword,
-      hospitalCode: loginHospitalCode,
+      hospitalCode: loginHospitalCode
     });
     setLoading(false);
 
@@ -71,8 +74,12 @@ export function AdminAuthForm() {
             <Shield className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Hospital Administration</h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300">System Governance Portal</p>
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+              Hospital Administration
+            </h2>
+            <p className="text-xs text-slate-600 dark:text-slate-300">
+              System Governance Portal
+            </p>
           </div>
         </div>
 
@@ -169,14 +176,18 @@ export function AdminAuthForm() {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </button>
           </div>
         </div>
 
         {/* Options */}
         <div className="flex items-center justify-between text-xs">
-          <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
+          <label className="flex cursor-pointer items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
             <input
               type="checkbox"
               checked={rememberMe}
@@ -190,7 +201,7 @@ export function AdminAuthForm() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white shadow-lg hover:bg-slate-800 active:scale-98 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+          className="active:scale-98 w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white shadow-lg hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
         >
           {loading ? (
             <div className="flex items-center gap-2">

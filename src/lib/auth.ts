@@ -3,7 +3,14 @@ export type UserRole = "patient" | "doctor" | "admin";
 export interface PatientReport {
   id: string;
   title: string;
-  category: "Blood" | "Lab" | "Prescription" | "Scan" | "Discharge Summary" | "Medical Images" | "Other Clinical Documents";
+  category:
+    | "Blood"
+    | "Lab"
+    | "Prescription"
+    | "Scan"
+    | "Discharge Summary"
+    | "Medical Images"
+    | "Other Clinical Documents";
   date: string;
   doctorName: string;
   size: string;
@@ -141,10 +148,15 @@ export interface AdminRecord {
 }
 
 export interface AuthSession {
+  sessionId: string;
   role: UserRole;
-  user: PatientRecord | DoctorRecord | AdminRecord;
   token: string;
   authenticatedAt: string;
+  expiresAt: string;
+}
+
+export interface FullSession extends AuthSession {
+  user: PatientRecord | DoctorRecord | AdminRecord;
 }
 
 // ---------------------------------------------------------------------------
@@ -162,27 +174,29 @@ export const DEMO_PATIENTS: PatientRecord[] = [
     emergencyContact: {
       name: "Priya Sharma",
       relation: "Spouse",
-      phone: "+91 98765 43210",
+      phone: "+91 98765 43210"
     },
     assignedDoctor: {
       id: "doc-sarah-jenkins",
       name: "Dr. Sarah Jenkins",
       title: "Chief of Cardiology",
       email: "dr.smith@stjudehealth.org",
-      department: "Cardiology & Vascular Institute",
+      department: "Cardiology & Vascular Institute"
     },
     medicalHistory: {
       condition: "Post-Coronary Stent Placement",
       hospital: "St. Jude Heart Institute",
       dischargeDate: "2026-07-12",
-      notes: "Successful drug-eluting stent placement in LAD. Stable hemodynamic recovery.",
-      allergies: ["Penicillin", "Sulfa drugs"],
+      notes:
+        "Successful drug-eluting stent placement in LAD. Stable hemodynamic recovery.",
+      allergies: ["Penicillin", "Sulfa drugs"]
     },
     diseaseInfo: {
       name: "Coronary Artery Disease (CAD)",
       stage: "Post-Surgical Recovery (Phase 2)",
       riskCategory: "Low",
-      summary: "Cardiac recovery protocol following stent intervention. Vital signs stable.",
+      summary:
+        "Cardiac recovery protocol following stent intervention. Vital signs stable."
     },
     medicationPlan: [
       {
@@ -193,7 +207,7 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         instructions: "Take with food to prevent gastric discomfort.",
         morningCompleted: false,
         afternoonCompleted: true,
-        nightCompleted: false,
+        nightCompleted: false
       },
       {
         id: "m2",
@@ -203,7 +217,7 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         instructions: "Maintain cholesterol control.",
         morningCompleted: false,
         afternoonCompleted: false,
-        nightCompleted: false,
+        nightCompleted: false
       },
       {
         id: "m3",
@@ -213,8 +227,8 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         instructions: "Monitor heart rate prior to administration.",
         morningCompleted: true,
         afternoonCompleted: false,
-        nightCompleted: false,
-      },
+        nightCompleted: false
+      }
     ],
     dietPlan: {
       type: "Mediterranean Cardiac Recovery Diet",
@@ -224,7 +238,7 @@ export const DEMO_PATIENTS: PatientRecord[] = [
       recommendations: [
         "Include rich omega-3 fatty acids (salmon, walnuts, olive oil)",
         "Avoid high-sodium processed foods and fried items",
-        "Maintain lean protein and fiber intake across meals",
+        "Maintain lean protein and fiber intake across meals"
       ],
       meals: [
         {
@@ -232,38 +246,55 @@ export const DEMO_PATIENTS: PatientRecord[] = [
           meal: "Breakfast",
           title: "Oatmeal with Walnuts & Berries",
           calories: 420,
-          items: ["Steel-cut oats (1 cup)", "Chopped walnuts (15g)", "Fresh blueberries (50g)", "Skimmed milk (200ml)"],
+          items: [
+            "Steel-cut oats (1 cup)",
+            "Chopped walnuts (15g)",
+            "Fresh blueberries (50g)",
+            "Skimmed milk (200ml)"
+          ],
           completed: true,
-          instructions: "No added refined sugar. High fiber heart support.",
+          instructions: "No added refined sugar. High fiber heart support."
         },
         {
           id: "meal-2",
           meal: "Lunch",
           title: "Grilled Salmon & Quinoa Salad",
           calories: 580,
-          items: ["Grilled salmon fillet (150g)", "Quinoa with herbs (1 cup)", "Steamed broccoli", "Extra virgin olive oil dressing"],
+          items: [
+            "Grilled salmon fillet (150g)",
+            "Quinoa with herbs (1 cup)",
+            "Steamed broccoli",
+            "Extra virgin olive oil dressing"
+          ],
           completed: true,
-          instructions: "Rich in omega-3 fatty acids. Low sodium seasoning.",
+          instructions: "Rich in omega-3 fatty acids. Low sodium seasoning."
         },
         {
           id: "meal-3",
           meal: "Snacks",
           title: "Unsalted Almonds & Green Tea",
           calories: 180,
-          items: ["Raw unsalted almonds (12-15 nuts)", "Unsweetened green tea (1 cup)"],
+          items: [
+            "Raw unsalted almonds (12-15 nuts)",
+            "Unsweetened green tea (1 cup)"
+          ],
           completed: false,
-          instructions: "Mid-afternoon antioxidant boost.",
+          instructions: "Mid-afternoon antioxidant boost."
         },
         {
           id: "meal-4",
           meal: "Dinner",
           title: "Steamed Chicken Breast & Brown Rice",
           calories: 520,
-          items: ["Herb steamed chicken breast (150g)", "Steamed brown rice (1/2 cup)", "Sautéed spinach with garlic"],
+          items: [
+            "Herb steamed chicken breast (150g)",
+            "Steamed brown rice (1/2 cup)",
+            "Sautéed spinach with garlic"
+          ],
           completed: false,
-          instructions: "Eat before 8:00 PM for optimal digestion.",
-        },
-      ],
+          instructions: "Eat before 8:00 PM for optimal digestion."
+        }
+      ]
     },
     vitals: {
       sleepHours: 7.5,
@@ -271,13 +302,14 @@ export const DEMO_PATIENTS: PatientRecord[] = [
       waterIntakeLiters: 1.75,
       waterTargetLiters: 2.5,
       stepsCount: 4250,
-      heartRateBpm: 68,
+      heartRateBpm: 68
     },
     badgeInfo: {
       level: "Gold",
       points: 840,
       targetPoints: 1000,
-      legend: "Level Legend: Bronze (0-299 pts) • Silver (300-599 pts) • Gold (600-899 pts) • Platinum (900+ pts)",
+      legend:
+        "Level Legend: Bronze (0-299 pts) • Silver (300-599 pts) • Gold (600-899 pts) • Platinum (900+ pts)"
     },
     reports: [
       {
@@ -287,7 +319,8 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         date: "2026-07-12",
         doctorName: "Dr. Sarah Jenkins",
         size: "2.4 MB",
-        summary: "Patient discharged in stable condition following LAD stent placement. Ejection fraction 58%. Hemodynamics normal.",
+        summary:
+          "Patient discharged in stable condition following LAD stent placement. Ejection fraction 58%. Hemodynamics normal."
       },
       {
         id: "rep-2",
@@ -296,7 +329,8 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         date: "2026-07-20",
         doctorName: "Dr. Sarah Jenkins",
         size: "1.1 MB",
-        summary: "Troponin I levels normalized (< 0.01 ng/mL). Total cholesterol 155 mg/dL. LDL 72 mg/dL. Excellent lipid response.",
+        summary:
+          "Troponin I levels normalized (< 0.01 ng/mL). Total cholesterol 155 mg/dL. LDL 72 mg/dL. Excellent lipid response."
       },
       {
         id: "rep-3",
@@ -305,7 +339,8 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         date: "2026-07-22",
         doctorName: "Dr. Sarah Jenkins",
         size: "3.8 MB",
-        summary: "Normal sinus rhythm, HR 66 bpm. No ST-segment elevation or new ischemic changes.",
+        summary:
+          "Normal sinus rhythm, HR 66 bpm. No ST-segment elevation or new ischemic changes."
       },
       {
         id: "rep-4",
@@ -314,7 +349,8 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         date: "2026-07-24",
         doctorName: "Dr. Sarah Jenkins",
         size: "5.2 MB",
-        summary: "Transthoracic echocardiogram demonstrates normal LV systolic function without wall motion abnormalities.",
+        summary:
+          "Transthoracic echocardiogram demonstrates normal LV systolic function without wall motion abnormalities."
       },
       {
         id: "rep-5",
@@ -323,8 +359,9 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         date: "2026-07-12",
         doctorName: "Dr. Sarah Jenkins",
         size: "850 KB",
-        summary: "Dual antiplatelet therapy prescribed alongside atorvastatin and metoprolol.",
-      },
+        summary:
+          "Dual antiplatelet therapy prescribed alongside atorvastatin and metoprolol."
+      }
     ],
     timeline: [
       {
@@ -332,58 +369,65 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         stage: "Admission",
         title: "Admitted to St. Jude Cardiac Care Unit",
         date: "2026-07-10",
-        description: "Presented with exertional angina. Emergency angiogram confirmed 85% proximal LAD stenosis.",
-        completed: true,
+        description:
+          "Presented with exertional angina. Emergency angiogram confirmed 85% proximal LAD stenosis.",
+        completed: true
       },
       {
         id: "tl-2",
         stage: "Diagnosis & Intervention",
         title: "Successful Percutaneous Coronary Intervention (PCI)",
         date: "2026-07-11",
-        description: "Drug-eluting stent successfully deployed in LAD artery. TIMI 3 flow restored.",
-        completed: true,
+        description:
+          "Drug-eluting stent successfully deployed in LAD artery. TIMI 3 flow restored.",
+        completed: true
       },
       {
         id: "tl-3",
         stage: "Discharge",
         title: "Discharged with Cardiac Rehabilitation Plan",
         date: "2026-07-12",
-        description: "Discharged in stable condition. Onboarding completed for Pulse Care remote tracking.",
-        completed: true,
+        description:
+          "Discharged in stable condition. Onboarding completed for Pulse Care remote tracking.",
+        completed: true
       },
       {
         id: "tl-4",
         stage: "Daily Recovery",
         title: "Phase 2 Cardiac Rehab & Check-ins",
         date: "2026-07-13 to Present",
-        description: "Logging daily symptoms, medication adherence, walking vitals, and dietary compliance.",
-        completed: true,
+        description:
+          "Logging daily symptoms, medication adherence, walking vitals, and dietary compliance.",
+        completed: true
       },
       {
         id: "tl-5",
         stage: "Doctor Feedback",
         title: "2-Week Clinical Tele-Consultation",
         date: "2026-07-28",
-        description: "Scheduled video review with Dr. Sarah Jenkins to review progress and lab work.",
-        completed: false,
+        description:
+          "Scheduled video review with Dr. Sarah Jenkins to review progress and lab work.",
+        completed: false
       },
       {
         id: "tl-6",
         stage: "Milestones",
         title: "1-Month Post-Stent Full Functional Assessment",
         date: "2026-08-12",
-        description: "Target milestone for complete return to moderate aerobic activities.",
-        completed: false,
-      },
+        description:
+          "Target milestone for complete return to moderate aerobic activities.",
+        completed: false
+      }
     ],
     notifications: [
       {
         id: "notif-1",
         title: "Medicine Reminder",
-        message: "Time for Metoprolol Succinate (25mg) - Evening Dose at 8:00 PM.",
+        message:
+          "Time for Metoprolol Succinate (25mg) - Evening Dose at 8:00 PM.",
         type: "medication",
         timestamp: "Today at 7:30 PM",
-        read: false,
+        read: false
       },
       {
         id: "notif-2",
@@ -391,15 +435,16 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         message: "Log your Dinner meal: Steamed Chicken Breast & Brown Rice.",
         type: "meal",
         timestamp: "Today at 7:00 PM",
-        read: false,
+        read: false
       },
       {
         id: "notif-3",
         title: "Water Intake Reminder",
-        message: "You are 750ml away from reaching your 2.5L daily hydration target.",
+        message:
+          "You are 750ml away from reaching your 2.5L daily hydration target.",
         type: "water",
         timestamp: "Today at 5:00 PM",
-        read: true,
+        read: true
       },
       {
         id: "notif-4",
@@ -407,16 +452,17 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         message: "Your daily recovery check-in is pending for today.",
         type: "checkin",
         timestamp: "Today at 9:00 AM",
-        read: false,
+        read: false
       },
       {
         id: "notif-5",
         title: "Doctor Message",
-        message: "Dr. Sarah Jenkins: 'Great job maintaining your 14-day check-in streak, Rahul! Keep your sodium low.'",
+        message:
+          "Dr. Sarah Jenkins: 'Great job maintaining your 14-day check-in streak, Rahul! Keep your sodium low.'",
         type: "doctor",
         timestamp: "Yesterday at 4:15 PM",
-        read: true,
-      },
+        read: true
+      }
     ],
     recoveryStatus: {
       streakDays: 14,
@@ -424,7 +470,7 @@ export const DEMO_PATIENTS: PatientRecord[] = [
       readinessRating: "Optimal Clinical Progress",
       lastCheckIn: "2026-07-26 at 8:15 PM",
       checkInStatus: "Pending",
-      nextReminder: "Today at 8:00 PM",
+      nextReminder: "Today at 8:00 PM"
     },
     previousCheckIns: [
       {
@@ -432,23 +478,23 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         completed: true,
         symptomsLogged: ["Mild fatigue"],
         painScale: 1,
-        notes: "Completed morning walking exercise without chest pressure.",
+        notes: "Completed morning walking exercise without chest pressure."
       },
       {
         date: "2026-07-25",
         completed: true,
         symptomsLogged: ["None"],
         painScale: 0,
-        notes: "Vitals normal. Pulse 68 bpm, BP 118/76.",
+        notes: "Vitals normal. Pulse 68 bpm, BP 118/76."
       },
       {
         date: "2026-07-24",
         completed: true,
         symptomsLogged: ["Slight dizziness"],
         painScale: 2,
-        notes: "Hydrated well after afternoon walk. Dizziness resolved.",
-      },
-    ],
+        notes: "Hydrated well after afternoon walk. Dizziness resolved."
+      }
+    ]
   },
   {
     id: "pat-jordan-77002",
@@ -460,27 +506,27 @@ export const DEMO_PATIENTS: PatientRecord[] = [
     emergencyContact: {
       name: "Alex Lee",
       relation: "Sibling",
-      phone: "+91 91234 56789",
+      phone: "+91 91234 56789"
     },
     assignedDoctor: {
       id: "doc-amara-okafor",
       name: "Dr. Amara Okafor",
       title: "Senior Cardiologist",
       email: "dr.amara.okafor@pulsecare.dev",
-      department: "Post-Discharge Care Unit",
+      department: "Post-Discharge Care Unit"
     },
     medicalHistory: {
       condition: "Myocardial Infarction - Mild",
       hospital: "Pulse Memorial Hospital",
       dischargeDate: "2026-07-15",
       notes: "Post-MI rehabilitation course progressing smoothly.",
-      allergies: ["Latex"],
+      allergies: ["Latex"]
     },
     diseaseInfo: {
       name: "Ischemic Heart Disease",
       stage: "Post-Acute Phase",
       riskCategory: "Low",
-      summary: "Patient shows consistent adherence and improving endurance.",
+      summary: "Patient shows consistent adherence and improving endurance."
     },
     medicationPlan: [
       {
@@ -491,8 +537,8 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         instructions: "Do not skip doses.",
         morningCompleted: true,
         afternoonCompleted: false,
-        nightCompleted: false,
-      },
+        nightCompleted: false
+      }
     ],
     dietPlan: {
       type: "Low-Sodium Cardiac Diet",
@@ -506,11 +552,15 @@ export const DEMO_PATIENTS: PatientRecord[] = [
           meal: "Breakfast",
           title: "Avocado & Whole Grain Toast",
           calories: 380,
-          items: ["Whole grain bread (2 slices)", "Avocado mash", "Poached egg"],
+          items: [
+            "Whole grain bread (2 slices)",
+            "Avocado mash",
+            "Poached egg"
+          ],
           completed: true,
-          instructions: "Healthy fats breakfast.",
-        },
-      ],
+          instructions: "Healthy fats breakfast."
+        }
+      ]
     },
     vitals: {
       sleepHours: 8.0,
@@ -518,13 +568,14 @@ export const DEMO_PATIENTS: PatientRecord[] = [
       waterIntakeLiters: 2.0,
       waterTargetLiters: 2.0,
       stepsCount: 5100,
-      heartRateBpm: 72,
+      heartRateBpm: 72
     },
     badgeInfo: {
       level: "Silver",
       points: 480,
       targetPoints: 600,
-      legend: "Level Legend: Bronze (0-299 pts) • Silver (300-599 pts) • Gold (600-899 pts) • Platinum (900+ pts)",
+      legend:
+        "Level Legend: Bronze (0-299 pts) • Silver (300-599 pts) • Gold (600-899 pts) • Platinum (900+ pts)"
     },
     reports: [
       {
@@ -534,8 +585,8 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         date: "2026-07-15",
         doctorName: "Dr. Amara Okafor",
         size: "1.8 MB",
-        summary: "Discharged following mild MI treatment.",
-      },
+        summary: "Discharged following mild MI treatment."
+      }
     ],
     timeline: [
       {
@@ -544,8 +595,8 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         title: "Hospital Care",
         date: "2026-07-13",
         description: "Admitted for observation and stabilization.",
-        completed: true,
-      },
+        completed: true
+      }
     ],
     notifications: [],
     recoveryStatus: {
@@ -554,7 +605,7 @@ export const DEMO_PATIENTS: PatientRecord[] = [
       readinessRating: "Steady Recovery",
       lastCheckIn: "2026-07-26",
       checkInStatus: "Pending",
-      nextReminder: "Today at 8:00 PM",
+      nextReminder: "Today at 8:00 PM"
     },
     previousCheckIns: [
       {
@@ -562,10 +613,10 @@ export const DEMO_PATIENTS: PatientRecord[] = [
         completed: true,
         symptomsLogged: ["None"],
         painScale: 0,
-        notes: "Feeling good.",
-      },
-    ],
-  },
+        notes: "Feeling good."
+      }
+    ]
+  }
 ];
 
 export const DEMO_DOCTORS: DoctorRecord[] = [
@@ -576,7 +627,7 @@ export const DEMO_DOCTORS: DoctorRecord[] = [
     title: "Chief of Cardiology",
     department: "Cardiology & Vascular Institute",
     hospital: "St. Jude Heart Institute",
-    assignedPatientIds: ["pat-rahul-88201"],
+    assignedPatientIds: ["pat-rahul-88201"]
   },
   {
     id: "doc-amara-okafor",
@@ -585,8 +636,8 @@ export const DEMO_DOCTORS: DoctorRecord[] = [
     title: "Senior Cardiologist",
     department: "Post-Discharge Care Unit",
     hospital: "Pulse Care Health Center",
-    assignedPatientIds: ["pat-jordan-77002"],
-  },
+    assignedPatientIds: ["pat-jordan-77002"]
+  }
 ];
 
 export const DEMO_ADMIN: AdminRecord = {
@@ -594,7 +645,7 @@ export const DEMO_ADMIN: AdminRecord = {
   name: "Admin Operations",
   email: "admin@stjudehealth.org",
   hospitalCode: "HOSP-90210",
-  department: "Hospital Administration & Governance",
+  department: "Hospital Administration & Governance"
 };
 
 export const SESSION_COOKIE_NAME = "pulse_session";

@@ -1,23 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
   Bell,
-  ChevronDown,
+  ChevronRight,
   LayoutDashboard,
   LogOut,
   Menu,
   Search,
   Settings,
   User,
-  X,
+  X
 } from "lucide-react";
 
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/auth-context";
 
@@ -38,245 +37,375 @@ interface RoleShellProps {
   children: React.ReactNode;
 }
 
-export function RoleShell({
-  role,
-  title,
-  description,
-  navItems,
-  children,
-}: RoleShellProps) {
+const roleAccent: Record<
+  RoleType,
+  { color: string; dim: string; border: string }
+> = {
+  patient: {
+    color: "#34D399",
+    dim: "rgba(52,211,153,0.10)",
+    border: "rgba(52,211,153,0.20)"
+  },
+  doctor: {
+    color: "#818CF8",
+    dim: "rgba(129,140,248,0.10)",
+    border: "rgba(129,140,248,0.20)"
+  },
+  admin: {
+    color: "#A1A1AA",
+    dim: "rgba(161,161,170,0.08)",
+    border: "rgba(161,161,170,0.16)"
+  }
+};
+
+export function RoleShell({ role, navItems, children }: RoleShellProps) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const router = useRouter();
+  const { user, logout, isAuthenticated, isLoading } = useAuth();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
 
-  // Dynamic user details from auth session or role defaults
+  const accent = roleAccent[role];
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) router.push("/login");
+  }, [isAuthenticated, isLoading, router]);
+
   const userObj = (user || {}) as Record<string, unknown>;
-  const activeName = user?.name || (role === "patient" ? "Rahul Sharma" : role === "doctor" ? "Dr. Sarah Jenkins" : "Admin Operations");
-  const activeSub = role === "patient" 
-    ? `Patient ID: ${typeof userObj.patientIdCode === "string" ? userObj.patientIdCode : "P-88201"}` 
-    : role === "doctor" 
-    ? (typeof userObj.title === "string" ? userObj.title : "Chief of Cardiology")
-    : `System Director • ${typeof userObj.hospitalCode === "string" ? userObj.hospitalCode : "HOSP-90210"}`;
+  const userName =
+    user?.name ||
+    (role === "patient"
+      ? "Rahul Sharma"
+      : role === "doctor"
+        ? "Dr. Sarah Jenkins"
+        : "Admin Operations");
+  const userSub =
+    role === "patient"
+      ? `ID: ${typeof userObj.patientIdCode === "string" ? userObj.patientIdCode : "P-88201"}`
+      : role === "doctor"
+        ? typeof userObj.title === "string"
+          ? userObj.title
+          : "Chief of Cardiology"
+        : `Director · ${typeof userObj.hospitalCode === "string" ? userObj.hospitalCode : "HOSP-90210"}`;
 
-  const roleConfig = {
-    patient: {
-      badge: "Patient Portal",
-      badgeClass: "bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300",
-      avatarBg: "bg-blue-600 text-white",
-      userName: activeName,
-      userSub: activeSub,
-      notifications: [
-        "Daily recovery check-in due today at 8:00 PM",
-        "Dr. Sarah Jenkins uploaded post-discharge report",
-        "Medication reminder: Aspirin 75mg at lunch",
-      ],
-    },
-    doctor: {
-      badge: "Doctor Workspace",
-      badgeClass: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300",
-      avatarBg: "bg-emerald-600 text-white",
-      userName: activeName,
-      userSub: activeSub,
-      notifications: [
-        "2 new patient discharge check-ins submitted",
-        "High risk alert: Patient P-4020 reported chest tightness",
-        "Weekly clinical review summary generated",
-      ],
-    },
-    admin: {
-      badge: "Admin Console",
-      badgeClass: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
-      avatarBg: "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900",
-      userName: activeName,
-      userSub: activeSub,
-      notifications: [
-        "System maintenance scheduled for midnight",
-        "3 new doctor profiles pending credential validation",
-        "EHR synchronization nominal (99.98% uptime)",
-      ],
-    },
-  }[role];
+  const initials = userName
+    .split(" ")
+    .map((n: string) => n[0])
+    .join("")
+    .slice(0, 2);
 
-  const handleLogout = async () => {
-    await logout();
+  const notifications: Record<RoleType, string[]> = {
+    patient: [
+      "Daily recovery check-in due today",
+      "Dr. Sarah Jenkins uploaded a new report",
+      "Medication reminder: Aspirin 75mg at 8 PM"
+    ],
+    doctor: [
+      "2 new patient check-ins submitted",
+      "High risk alert: Patient P-4020",
+      "Weekly clinical review generated"
+    ],
+    admin: [
+      "System maintenance at midnight",
+      "3 doctor profiles pending validation",
+      "EHR sync nominal — 99.98% uptime"
+    ]
   };
 
-  return (
-    <div className="min-h-screen w-full bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
-      {/* Mobile Drawer Backdrop */}
-      {mobileOpen && (
-        <div
-          onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-sm lg:hidden"
-        />
-      )}
+  const SIDEBAR_W = 260;
 
-      {/* Sidebar Navigation */}
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200/80 bg-white/90 backdrop-blur-2xl transition-transform duration-300 dark:border-slate-800/80 dark:bg-slate-900/90 lg:translate-x-0",
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+  return (
+    <div className="min-h-screen w-full bg-background text-foreground">
+      {/* ── Mobile overlay ── */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobileOpen(false)}
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          />
         )}
+      </AnimatePresence>
+
+      {/* ── Sidebar ── */}
+      <motion.aside
+        initial={false}
+        animate={{ x: mobileOpen ? 0 : undefined }}
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex flex-col",
+          "lg:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+        style={{
+          width: SIDEBAR_W,
+          background: "#0D0D0F",
+          borderRight: "1px solid rgba(255,255,255,0.05)"
+        }}
       >
-        {/* Sidebar Brand Header */}
-        <div className="flex h-16 items-center justify-between border-b border-slate-100 px-6 dark:border-slate-800">
-          <Link href="/" className="flex items-center gap-2.5 font-bold tracking-tight">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md">
-              <Activity className="h-5 w-5" />
-            </span>
-            <span className="text-lg text-slate-900 dark:text-white">Pulse</span>
-            <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", roleConfig.badgeClass)}>
+        {/* Brand */}
+        <div
+          className="flex h-14 items-center justify-between px-5"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+        >
+          <Link href="/" className="flex items-center gap-2.5">
+            <div
+              className="flex h-7 w-7 items-center justify-center rounded-lg"
+              style={{
+                background: accent.dim,
+                border: `1px solid ${accent.border}`
+              }}
+            >
+              <Activity
+                className="h-3.5 w-3.5"
+                style={{ color: accent.color }}
+              />
+            </div>
+            <span className="text-sm font-semibold text-foreground">Pulse</span>
+            <span
+              className="rounded-full px-2 py-0.5 text-[10px] font-medium capitalize"
+              style={{
+                background: accent.dim,
+                color: accent.color,
+                border: `1px solid ${accent.border}`
+              }}
+            >
               {role}
             </span>
           </Link>
-
           <button
             onClick={() => setMobileOpen(false)}
-            className="rounded-lg p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 lg:hidden"
+            className="transition-apple-fast rounded-lg p-1 text-text-muted hover:text-foreground lg:hidden"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Search Bar Placeholder */}
-        <div className="p-4">
-          <div className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs text-slate-500 transition-colors hover:border-slate-300 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-400">
-            <Search className="h-4 w-4 text-slate-400" />
-            <span className="flex-1 truncate">Search workspace...</span>
-            <kbd className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-mono text-slate-600 dark:bg-slate-800 dark:text-slate-400">⌘K</kbd>
+        {/* Search */}
+        <div className="px-4 py-3">
+          <div
+            className="transition-apple-fast flex h-9 items-center gap-2 rounded-xl px-3 text-xs text-text-muted hover:border-white/[0.12]"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.06)"
+            }}
+          >
+            <Search className="h-3.5 w-3.5 shrink-0 opacity-60" />
+            <span className="flex-1 truncate">Search…</span>
+            <kbd className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-text-muted">
+              ⌘K
+            </kbd>
           </div>
         </div>
 
-        {/* Nav Links */}
-        <nav className="flex-1 space-y-1.5 px-4 overflow-y-auto">
-          {navItems.map((item) => {
+        {/* Nav */}
+        <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-4">
+          {navItems.map((item, i) => {
             const Icon = item.icon;
-            const active = pathname === item.href || (item.href !== `/${role}` && pathname.startsWith(item.href));
+            const active =
+              pathname === item.href ||
+              (item.href !== `/${role}` && pathname.startsWith(item.href));
 
             return (
-              <Link
+              <motion.div
                 key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex h-11 items-center justify-between rounded-xl px-3.5 text-xs font-semibold transition-all",
-                  active
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200"
-                )}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{
+                  delay: i * 0.04,
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 28
+                }}
               >
-                <div className="flex items-center gap-3">
-                  <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </div>
-                {item.badge && (
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-[10px] font-bold",
-                      active ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                    )}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
+                <Link
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="transition-apple-fast group relative flex h-9 items-center justify-between rounded-xl px-3 text-xs font-medium"
+                  style={{
+                    background: active ? accent.dim : "transparent",
+                    color: active ? accent.color : "#71717A",
+                    border: active
+                      ? `1px solid ${accent.border}`
+                      : "1px solid transparent"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!active) {
+                      (e.currentTarget as HTMLElement).style.background =
+                        "rgba(255,255,255,0.04)";
+                      (e.currentTarget as HTMLElement).style.color = "#FAFAFA";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active) {
+                      (e.currentTarget as HTMLElement).style.background =
+                        "transparent";
+                      (e.currentTarget as HTMLElement).style.color = "#71717A";
+                    }
+                  }}
+                >
+                  {active && (
+                    <motion.div
+                      layoutId={`nav-active-${role}`}
+                      className="absolute inset-0 rounded-xl"
+                      style={{
+                        background: accent.dim,
+                        border: `1px solid ${accent.border}`
+                      }}
+                      transition={{
+                        type: "spring",
+                        bounce: 0.15,
+                        duration: 0.5
+                      }}
+                    />
+                  )}
+                  <div className="relative flex items-center gap-2.5">
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span
+                      className="relative rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+                      style={{ background: accent.dim, color: accent.color }}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              </motion.div>
             );
           })}
         </nav>
 
-        {/* Sidebar Footer Profile */}
-        <div className="border-t border-slate-100 p-4 dark:border-slate-800">
-          <div className="flex items-center justify-between rounded-xl border border-slate-200/60 bg-slate-50/80 p-3 dark:border-slate-800/60 dark:bg-slate-950/40">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className={cn("flex h-9 w-9 items-center justify-center rounded-xl font-bold text-xs shadow-sm shrink-0", roleConfig.avatarBg)}>
-                {roleConfig.userName.split(" ").map((n) => n[0]).join("")}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-slate-900 dark:text-white">{roleConfig.userName}</p>
-                <p className="truncate text-[10px] text-slate-500 dark:text-slate-400">{roleConfig.userSub}</p>
-              </div>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              title="Logout"
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-colors"
+        {/* Profile */}
+        <div
+          className="p-3"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
+        >
+          <div
+            className="transition-apple-fast flex items-center gap-3 rounded-xl p-3"
+            style={{
+              background: "rgba(255,255,255,0.025)",
+              border: "1px solid rgba(255,255,255,0.06)"
+            }}
+          >
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold"
+              style={{
+                background: accent.dim,
+                color: accent.color,
+                border: `1px solid ${accent.border}`
+              }}
             >
-              <LogOut className="h-4 w-4" />
+              {initials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-foreground">
+                {userName}
+              </p>
+              <p className="truncate text-[10px] text-text-muted">{userSub}</p>
+            </div>
+            <button
+              onClick={() => logout()}
+              className="transition-apple-fast shrink-0 rounded-lg p-1.5 text-text-muted hover:bg-danger/10 hover:text-danger"
+              title="Sign out"
+            >
+              <LogOut className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
-      </aside>
+      </motion.aside>
 
-      {/* Main Layout Area */}
-      <div className="flex flex-col lg:pl-72">
-        {/* Top Header Bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-900/80 sm:px-6">
+      {/* ── Main area ── */}
+      <div className="flex flex-col lg:pl-[260px]">
+        {/* Top bar */}
+        <header
+          className="glass sticky top-0 z-30 flex h-14 items-center justify-between px-5 sm:px-6"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+        >
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
-              className="rounded-xl border border-slate-200 p-2 text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 lg:hidden"
+              className="transition-apple-fast rounded-xl border border-white/[0.07] p-2 text-text-muted hover:text-foreground lg:hidden"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-4 w-4" />
             </button>
 
-            <div>
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                <span>Pulse</span>
-                <span>/</span>
-                <span className="font-semibold text-slate-900 dark:text-white capitalize">{role} Workspace</span>
-              </div>
+            {/* Breadcrumb */}
+            <div className="hidden items-center gap-1.5 text-xs text-text-muted sm:flex">
+              <span>Pulse</span>
+              <ChevronRight className="h-3 w-3 opacity-40" />
+              <span className="font-medium capitalize text-text-secondary">
+                {role}
+              </span>
             </div>
           </div>
 
-          {/* Right Header Actions */}
-          <div className="flex items-center gap-3">
-            {/* Theme Toggle */}
-            <ThemeToggle />
-
-            {/* Notification Bell */}
+          <div className="flex items-center gap-2">
+            {/* Notification bell */}
             <div className="relative">
               <button
-                onClick={() => {
-                  setNotifOpen(!notifOpen);
-                  setProfileOpen(false);
-                }}
-                className="relative rounded-xl border border-slate-200/80 p-2 text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
-                title="Notifications"
+                onClick={() => setNotifOpen((v) => !v)}
+                className="transition-apple-fast relative rounded-xl border border-white/[0.07] p-2 text-text-muted hover:text-foreground"
               >
                 <Bell className="h-4 w-4" />
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-blue-600" />
+                <span
+                  className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full"
+                  style={{ background: accent.color }}
+                />
               </button>
 
-              {/* Notification Popover */}
               <AnimatePresence>
                 {notifOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-800 dark:bg-slate-900 z-50"
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{
+                      type: "spring",
+                      bounce: 0.15,
+                      duration: 0.35
+                    }}
+                    className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-2xl"
+                    style={{
+                      background: "#18181B",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      boxShadow: "0 16px 48px rgba(0,0,0,0.7)"
+                    }}
                   >
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                    <div
+                      className="flex items-center justify-between px-4 py-3"
+                      style={{
+                        borderBottom: "1px solid rgba(255,255,255,0.06)"
+                      }}
+                    >
+                      <span className="text-xs font-semibold text-foreground">
                         Notifications
-                      </h4>
-                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600 dark:bg-blue-950 dark:text-blue-400">
-                        3 New
+                      </span>
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                        style={{ background: accent.dim, color: accent.color }}
+                      >
+                        3 new
                       </span>
                     </div>
-
-                    <div className="mt-3 space-y-2.5">
-                      {roleConfig.notifications.map((msg, i) => (
-                        <div
+                    <div className="space-y-1 p-2">
+                      {notifications[role].map((msg, i) => (
+                        <motion.div
                           key={i}
-                          className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-2.5 text-xs text-slate-700 dark:bg-slate-800/60 dark:text-slate-300"
+                          initial={{ opacity: 0, x: -6 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.04 }}
+                          className="transition-apple-fast flex cursor-pointer items-start gap-2.5 rounded-xl px-3 py-2.5 text-xs text-text-secondary hover:bg-white/[0.04]"
                         >
-                          <span className="mt-0.5 h-2 w-2 rounded-full bg-blue-500 shrink-0" />
-                          <p className="leading-snug">{msg}</p>
-                        </div>
+                          <span
+                            className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full"
+                            style={{ background: accent.color }}
+                          />
+                          {msg}
+                        </motion.div>
                       ))}
                     </div>
                   </motion.div>
@@ -284,81 +413,33 @@ export function RoleShell({
               </AnimatePresence>
             </div>
 
-            {/* Settings Icon */}
-            <button
-              className="rounded-xl border border-slate-200/80 p-2 text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
-              title="Settings"
-            >
+            {/* Settings */}
+            <button className="transition-apple-fast rounded-xl border border-white/[0.07] p-2 text-text-muted hover:text-foreground">
               <Settings className="h-4 w-4" />
             </button>
 
-            {/* Profile Avatar & Menu */}
-            <div className="relative">
-              <button
-                onClick={() => {
-                  setProfileOpen(!profileOpen);
-                  setNotifOpen(false);
-                }}
-                className="flex items-center gap-2 rounded-xl border border-slate-200/80 p-1.5 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800 transition-colors"
+            {/* Avatar */}
+            <button className="transition-apple-fast flex items-center gap-2 rounded-xl border border-white/[0.07] px-2 py-1.5 hover:bg-white/[0.04]">
+              <div
+                className="flex h-6 w-6 items-center justify-center rounded-lg text-[10px] font-bold"
+                style={{ background: accent.dim, color: accent.color }}
               >
-                <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold", roleConfig.avatarBg)}>
-                  {roleConfig.userName.split(" ").map((n) => n[0]).join("")}
-                </div>
-                <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
-              </button>
-
-              <AnimatePresence>
-                {profileOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl dark:border-slate-800 dark:bg-slate-900 z-50"
-                  >
-                    <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
-                      <p className="text-xs font-bold text-slate-900 dark:text-white">{roleConfig.userName}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400">{roleConfig.userSub}</p>
-                    </div>
-
-                    <div className="mt-1 space-y-0.5">
-                      <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                        <User className="h-3.5 w-3.5 text-slate-400" />
-                        Account Details
-                      </button>
-                      <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                        <Settings className="h-3.5 w-3.5 text-slate-400" />
-                        Preferences
-                      </button>
-                      <button
-                        onClick={handleLogout}
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
-                      >
-                        <LogOut className="h-3.5 w-3.5" />
-                        Sign Out
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                {initials}
+              </div>
+              <User className="h-3 w-3 text-text-muted" />
+            </button>
           </div>
         </header>
 
-        {/* Main Content View Slot */}
-        <main className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl">
-          {/* Header Title Section */}
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-              {title}
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-              {description}
-            </p>
-          </div>
-
-          {/* Children View Slot */}
+        {/* Page content */}
+        <motion.main
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+          className="flex-1 p-5 sm:p-6 lg:p-8"
+        >
           {children}
-        </main>
+        </motion.main>
       </div>
     </div>
   );

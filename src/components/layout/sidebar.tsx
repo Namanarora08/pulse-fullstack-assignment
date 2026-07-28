@@ -29,13 +29,13 @@ export function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-white lg:flex lg:flex-col">
       <div className="flex h-16 items-center gap-2 border-b px-6">
-        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
+        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-recovery text-background">
           <Activity className="h-5 w-5" aria-hidden="true" />
         </span>
         <span className="font-semibold">Pulse Doctor</span>
       </div>
       <div className="p-4">
-        <div className="flex h-10 items-center gap-2 rounded-md border bg-background px-3 text-sm text-muted-foreground">
+        <div className="flex h-10 items-center gap-2 rounded-md border bg-background px-3 text-sm text-text-muted">
           <Search className="h-4 w-4" aria-hidden="true" />
           Search workspace
         </div>
@@ -52,8 +52,8 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground",
-                active && "bg-secondary text-foreground"
+                "flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-text-muted transition-colors hover:bg-background-elevated hover:text-text-primary",
+                active && "bg-background-elevated text-text-primary"
               )}
             >
               <Icon className="h-4 w-4" aria-hidden="true" />
@@ -63,7 +63,7 @@ export function Sidebar() {
         })}
       </nav>
       <div className="border-t p-4">
-        <div className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-text-muted">
           <Settings className="h-4 w-4" aria-hidden="true" />
           Workspace settings
         </div>

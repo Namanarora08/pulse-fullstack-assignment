@@ -1,0 +1,28 @@
+"use client";
+
+import { RoleShell } from "@/components/layout/role-shell";
+import { doctorNavItems } from "@/lib/doctor-nav";
+
+export default function DoctorReportsPage() {
+  return (
+    <RoleShell
+      role="doctor"
+      title="Clinical Reports"
+      description="View and generate detailed patient recovery reports and clinical summaries."
+      navItems={doctorNavItems}
+    >
+      <div className="space-y-6">
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white">
+            Patient Reports
+          </h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            Clinical reports interface will be implemented with database
+            integration. This section will display comprehensive patient
+            recovery reports and clinical summaries.
+          </p>
+        </div>
+      </div>
+    </RoleShell>
+  );
+}

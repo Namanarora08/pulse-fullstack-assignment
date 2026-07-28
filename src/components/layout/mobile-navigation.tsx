@@ -37,8 +37,8 @@ export function MobileNavigation() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex min-h-12 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-medium text-muted-foreground transition-colors",
-                active && "bg-secondary text-foreground"
+                "flex min-h-12 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-medium text-text-muted transition-colors",
+                active && "bg-background-elevated text-text-primary"
               )}
             >
               <Icon className="h-4 w-4" aria-hidden="true" />

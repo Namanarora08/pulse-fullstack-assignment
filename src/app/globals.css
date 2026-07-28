@@ -4,64 +4,237 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%; /* #f8fafc slate-50 */
-    --foreground: 222 47% 11%; /* #0f172a slate-900 */
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 221.2 83.2% 53.3%; /* #2563eb blue-600 */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 215.4 16.3% 46.9%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 158.1 64.4% 51.6%; /* emerald-500 */
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.875rem; /* 14px smooth Apple radius */
+    /* ── Pulse Design System — Dark-First ──────────────────────────────
+       Background scale: #09090B → #111113 → #18181B → #202024
+       All values map exactly to the spec.
+    ──────────────────────────────────────────────────────────────────── */
+
+    --background: 0 0% 4%; /* #09090B */
+    --background-secondary: 0 0% 7%; /* #111113 */
+    --background-elevated: 0 0% 9%; /* #18181B */
+    --background-raised: 0 0% 13%; /* #202024 */
+
+    --foreground: 0 0% 98%; /* #FAFAFA */
+
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 98%;
+
+    /* Text hierarchy */
+    --text-primary: 0 0% 98%; /* #FAFAFA */
+    --text-secondary: 0 0% 63%; /* #A1A1AA */
+    --text-muted: 0 0% 44%; /* #71717A */
+
+    /* Borders — gossamer thin */
+    --border: 0 0% 100% / 0.06;
+    --input: 0 0% 100% / 0.08;
+    --ring: 0 0% 98%;
+
+    /* ── Semantic accent palette ──────────────────────────────────────
+       Used ONLY where meaningful. 90 % of UI stays neutral.
+    ──────────────────────────────────────────────────────────────────── */
+    --recovery: 142 71% 45%; /* Green  */
+    --recovery-fg: 0 0% 98%;
+
+    --heart: 0 84% 60%; /* Red    */
+    --heart-fg: 0 0% 98%;
+
+    --medication: 217 91% 60%; /* Blue   */
+    --medication-fg: 0 0% 98%;
+
+    --sleep: 263 70% 55%; /* Purple */
+    --sleep-fg: 0 0% 98%;
+
+    --hydration: 188 94% 50%; /* Cyan   */
+    --hydration-fg: 0 0% 98%;
+
+    --warning: 38 95% 55%; /* Amber  */
+    --warning-fg: 0 0% 98%;
+
+    --danger: 0 84% 60%; /* Red    */
+    --danger-fg: 0 0% 98%;
+
+    /* Backward-compat aliases */
+    --primary: var(--recovery);
+    --primary-foreground: var(--recovery-fg);
+    --secondary: var(--medication);
+    --secondary-foreground: var(--medication-fg);
+    --muted: var(--background-elevated);
+    --muted-foreground: var(--text-secondary);
+    --accent: var(--background-raised);
+    --accent-foreground: var(--text-primary);
+    --success: var(--recovery);
+    --destructive: var(--danger);
+    --destructive-foreground: var(--danger-fg);
+    --popover: var(--background-elevated);
+    --popover-foreground: var(--foreground);
+
+    /* ── Radius system ────────────────────────────────────────────── */
+    --radius: 0.75rem;
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
+    --radius-2xl: 1.5rem;
+    --radius-3xl: 2rem;
+
+    /* ── Glass system ─────────────────────────────────────────────── */
+    --glass-bg: rgba(24, 24, 27, 0.72);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-blur: 24px;
+
+    /* ── Glow colours ─────────────────────────────────────────────── */
+    --glow-green: 0 0 28px rgba(52, 211, 153, 0.3);
+    --glow-red: 0 0 28px rgba(239, 68, 68, 0.3);
+    --glow-blue: 0 0 28px rgba(96, 165, 250, 0.3);
+    --glow-purple: 0 0 28px rgba(167, 139, 250, 0.3);
+    --glow-cyan: 0 0 28px rgba(34, 211, 238, 0.3);
+    --glow-amber: 0 0 28px rgba(251, 191, 36, 0.3);
   }
 
-  .dark {
-    --background: 224 71.4% 4.1%; /* #020617 slate-950 */
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%; /* #090d16 slate-900 */
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-  }
-
+  /* Force dark — no light mode flash */
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
 
   html {
     scroll-behavior: smooth;
+    color-scheme: dark;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   body {
-    @apply bg-background text-foreground antialiased selection:bg-blue-500/20 selection:text-blue-600;
-    font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #09090b;
+    color: #fafafa;
+    font-family:
+      var(--font-inter),
+      -apple-system,
+      BlinkMacSystemFont,
+      "SF Pro Display",
+      "Segoe UI",
+      system-ui,
+      sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    letter-spacing: -0.012em;
+    min-height: 100dvh;
   }
 }
 
-/* Custom minimal Apple-style scrollbars */
+/* ─────────────────────────────────────────────────────────────────────────
+   Component layer
+───────────────────────────────────────────────────────────────────────── */
+@layer components {
+  /* ── Glass surfaces ─────────────────────────────────────────────── */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glass-card {
+    @apply glass rounded-2xl;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .glass-panel {
+    @apply glass rounded-3xl;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 16px 48px rgba(0, 0, 0, 0.5);
+  }
+
+  /* ── Premium surfaces (no blur, just elevation) ─────────────────── */
+  .surface {
+    background-color: #18181b;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1.25rem;
+  }
+
+  .surface-raised {
+    background-color: #202024;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 1.25rem;
+  }
+
+  /* ── Premium shadows ────────────────────────────────────────────── */
+  .shadow-premium-sm {
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+  .shadow-premium-md {
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+  .shadow-premium-lg {
+    box-shadow:
+      0 8px 24px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+  .shadow-premium-xl {
+    box-shadow:
+      0 16px 40px rgba(0, 0, 0, 0.7),
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+  .shadow-premium-2xl {
+    box-shadow:
+      0 24px 64px rgba(0, 0, 0, 0.8),
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+
+  /* ── Glow helpers ───────────────────────────────────────────────── */
+  .shadow-glow-green {
+    box-shadow: var(--glow-green);
+  }
+  .shadow-glow-red {
+    box-shadow: var(--glow-red);
+  }
+  .shadow-glow-blue {
+    box-shadow: var(--glow-blue);
+  }
+  .shadow-glow-purple {
+    box-shadow: var(--glow-purple);
+  }
+  .shadow-glow-cyan {
+    box-shadow: var(--glow-cyan);
+  }
+  .shadow-glow-amber {
+    box-shadow: var(--glow-amber);
+  }
+
+  /* ── Transitions ────────────────────────────────────────────────── */
+  .transition-apple {
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .transition-apple-fast {
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .transition-spring {
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ── Metric display numbers ─────────────────────────────────────── */
+  .metric-number {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    letter-spacing: -0.03em;
+  }
+
+  /* ── Subtle divider ─────────────────────────────────────────────── */
+  .divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Scrollbar — invisible until hover
+───────────────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -70,10 +243,143 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+  background: rgba(255, 255, 255, 0.18);
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Focus — Apple-style ring
+───────────────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.25);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+button:focus,
+a:focus {
+  outline: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Range input — premium slider track
+───────────────────────────────────────────────────────────────────────── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fafafa;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  cursor: grab;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+input[type="range"]::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Date / Select inputs — dark native override
+───────────────────────────────────────────────────────────────────────── */
+input[type="date"],
+input[type="text"],
+input[type="email"],
+select,
+textarea {
+  color-scheme: dark;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Selection colour
+───────────────────────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(52, 211, 153, 0.25);
+  color: #fafafa;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Animated gradient text helper
+───────────────────────────────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #fafafa 0%, #a1a1aa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-green {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Page-level fade-in used by motion components
+───────────────────────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% center;
+  }
+  to {
+    background-position: 200% center;
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.animate-scale-in {
+  animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* skeleton shimmer */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
