@@ -227,12 +227,14 @@ export async function POST(request: NextRequest) {
         };
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const symptomIndex = calculateCategoryIndex(
-        answersWithQuestions,
+        answersWithQuestions as any,
         "SYMPTOM"
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const adherenceIndex = calculateCategoryIndex(
-        answersWithQuestions,
+        answersWithQuestions as any,
         "ADHERENCE"
       );
       const overallScore = calculateDailyScore(symptomIndex, adherenceIndex);
@@ -247,7 +249,7 @@ export async function POST(request: NextRequest) {
           symptomIndex,
           adherenceIndex
         },
-        answers: body.answers.map((ans: AnswerForSubmit) => ({
+        answers: body.answers.map((ans) => ({
           id: `ans-${Date.now()}-${ans.questionId}`,
           questionId: ans.questionId,
           boolValue: ans.booleanValue,
@@ -288,12 +290,14 @@ export async function POST(request: NextRequest) {
         })
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const symptomIndex = calculateCategoryIndex(
-        answersWithQuestions,
+        answersWithQuestions as any,
         "SYMPTOM"
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const adherenceIndex = calculateCategoryIndex(
-        answersWithQuestions,
+        answersWithQuestions as any,
         "ADHERENCE"
       );
       const overallScore = calculateDailyScore(symptomIndex, adherenceIndex);

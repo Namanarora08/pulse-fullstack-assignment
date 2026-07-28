@@ -49,8 +49,8 @@ export default function PatientReportsPage() {
   return (
     <RoleShell
       role="patient"
-      title="Medical Reports & Lab Results"
-      description="Access digital prescriptions, blood work, diagnostic scans, and hospital discharge documents."
+      title="Medical Reports"
+      description="Your lab results, prescriptions, and scan reports."
       navItems={patientNavItems}
     >
       <div className="space-y-6">
@@ -59,13 +59,13 @@ export default function PatientReportsPage() {
           <div className="space-y-1">
             <div className="inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/60 dark:text-blue-300">
               <FileCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-              EHR Digital Repository
+              Your Records
             </div>
             <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Verified Diagnostic Records ({reports.length})
+              Reports ({reports.length})
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              All documents are cryptographically signed by St. Jude Health Institute.
+              All your medical documents in one place.
             </p>
           </div>
         </div>

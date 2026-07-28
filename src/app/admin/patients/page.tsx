@@ -253,8 +253,8 @@ export default function AdminPatientsPage() {
   return (
     <RoleShell
       role="admin"
-      title="Patient Lifecycle Management"
-      description="Complete CRUD over patient enrollments, clinical profiles, and physician assignments."
+      title="Patients"
+      description="Manage patient records, assign to doctors, and track their progress."
       navItems={adminNavItems}
     >
       <div className="mx-auto max-w-6xl space-y-5">

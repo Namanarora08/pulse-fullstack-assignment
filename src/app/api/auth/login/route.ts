@@ -205,6 +205,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
-// Export session store for other API routes to access
-export { sessionStore };

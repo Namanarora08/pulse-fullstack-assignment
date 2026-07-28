@@ -83,8 +83,8 @@ export default function DoctorPatientsPage() {
   return (
     <RoleShell
       role="doctor"
-      title="Patient Roster"
-      description="Monitor assigned patient records, current risk status, and check-in history."
+      title="Your Patients"
+      description="See how each patient is doing. Track their progress and any concerns."
       navItems={doctorNavItems}
     >
       <div className="space-y-6">

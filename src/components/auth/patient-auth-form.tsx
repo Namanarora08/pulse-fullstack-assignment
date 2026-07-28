@@ -46,28 +46,28 @@ export function PatientAuthForm() {
 
   const syncSteps = [
     {
-      title: "Verifying Aadhaar Identity",
-      desc: "UIDAI token validated",
+      title: "Verifying ID",
+      desc: "Checking your identity",
       icon: ShieldCheck
     },
     {
-      title: "Fetching Medical History",
-      desc: "Discharge summary & diagnoses",
+      title: "Loading Records",
+      desc: "Getting your medical info",
       icon: FileText
     },
     {
-      title: "Syncing Care Team",
-      desc: "Assigned Doctor: Dr. Sarah Jenkins",
+      title: "Finding Your Doctor",
+      desc: "Dr. Sarah Jenkins",
       icon: UserCheck
     },
     {
-      title: "Loading Prescriptions",
-      desc: "Active medications & meal plans",
+      title: "Getting Medications",
+      desc: "Your active meds",
       icon: Pill
     },
     {
-      title: "Hydrating Recovery Status",
-      desc: "14-day streak & daily score",
+      title: "Setting Up Dashboard",
+      desc: "Your recovery info",
       icon: HeartPulse
     }
   ];

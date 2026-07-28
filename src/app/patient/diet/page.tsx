@@ -77,8 +77,8 @@ export default function PatientDietPage() {
   return (
     <RoleShell
       role="patient"
-      title="Diet & Hydration Plan"
-      description="Personalized cardiac nutrition plan, meal schedules, and hydration tracking."
+      title="Diet & Water"
+      description="Your meal plan and hydration goals."
       navItems={patientNavItems}
     >
       <div className="space-y-6">

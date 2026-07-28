@@ -55,8 +55,8 @@ export default function PatientProfilePage() {
   return (
     <RoleShell
       role="patient"
-      title="Patient Health Profile"
-      description="Personal demographics, verified clinical history, allergies, and care team directory."
+      title="Your Profile"
+      description="Your info, medical history, allergies, and doctors."
       navItems={patientNavItems}
     >
       <div className="space-y-6">
@@ -68,10 +68,10 @@ export default function PatientProfilePage() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-white">
-                Patient Demographics & Identification
+                Your Info
               </h2>
               <p className="text-xs text-slate-400">
-                Aadhaar verified healthcare identification
+                Personal identification
               </p>
             </div>
           </div>

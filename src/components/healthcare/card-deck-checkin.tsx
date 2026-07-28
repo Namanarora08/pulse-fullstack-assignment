@@ -170,13 +170,13 @@ export function CardDeckCheckin({
 
         <div className="space-y-2">
           <div className="bg-recovery/8 inline-flex items-center gap-1.5 rounded-full border border-recovery/20 px-3 py-1 text-xs font-medium text-recovery">
-            <Sparkles className="h-3 w-3" /> Check-in complete
+            <Check className="h-3 w-3" /> Done
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-foreground">
-            Great work today.
+            All set.
           </h2>
           <p className="mx-auto max-w-xs text-sm leading-relaxed text-text-muted">
-            Your clinical metrics are logged and visible to your cardiologist.
+            Your doctor will see this.
           </p>
         </div>
 
@@ -329,7 +329,7 @@ export function CardDeckCheckin({
                 {prompt}
               </h3>
               <p className="text-[11px] text-text-muted">
-                Drag right for Yes · left for No · or tap below
+                Swipe or tap your answer
               </p>
             </div>
 

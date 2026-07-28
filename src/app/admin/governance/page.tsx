@@ -71,8 +71,8 @@ export default function AdminGovernanceAuditPage() {
   return (
     <RoleShell
       role="admin"
-      title="System Audit & Security Compliance Log"
-      description="Cryptographically tracked immutable audit logs monitoring logins, clinical updates, physician assignments, document uploads, and system events."
+      title="System Audit Log"
+      description="Track logins, changes, and system events."
       navItems={adminNavItems}
     >
       <div className="space-y-6">
@@ -80,10 +80,10 @@ export default function AdminGovernanceAuditPage() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              System Audit Trail ({filteredLogs.length} Events)
+              Audit Log ({filteredLogs.length} events)
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              HIPAA-compliant event logging for security auditing and operational transparency.
+              See all system activity and changes.
             </p>
           </div>
 
@@ -91,7 +91,7 @@ export default function AdminGovernanceAuditPage() {
             onClick={handleExportAuditTrail}
             className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white gap-2 text-xs shrink-0"
           >
-            <Download className="h-4 w-4" /> Export CSV Audit Log
+            <Download className="h-4 w-4" /> Export CSV
           </Button>
         </div>
 

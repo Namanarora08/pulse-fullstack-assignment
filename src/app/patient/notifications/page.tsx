@@ -64,8 +64,8 @@ export default function PatientNotificationsPage() {
   return (
     <RoleShell
       role="patient"
-      title="Notifications & Care Reminders"
-      description="Real-time clinical notifications, medication alerts, hydration prompts, and doctor updates."
+      title="Notifications"
+      description="Medication alerts, reminders, and updates from your doctor."
       navItems={patientNavItems}
     >
       <div className="space-y-6">
@@ -76,7 +76,7 @@ export default function PatientNotificationsPage() {
               Patient Notification Feed ({notifications.filter((n) => !n.read).length} Unread)
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Timely reminders tailored to your cardiac recovery schedule.
+              Stay on top of your recovery.
             </p>
           </div>
 

@@ -21,8 +21,8 @@ export default function DoctorPage() {
   return (
     <RoleShell
       role="doctor"
-      title="Clinical Dashboard"
-      description="Monitor patient recovery trends, risk alerts, and daily check-in submissions."
+      title="Your Patients"
+      description="See how your patients are doing. View trends and concerns."
       navItems={doctorNavItems}
     >
       <div className="space-y-6">

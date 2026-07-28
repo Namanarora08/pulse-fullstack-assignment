@@ -34,47 +34,47 @@ const fadeUp = (delay = 0) => ({
 const features = [
   {
     icon: HeartPulse,
-    title: "Daily Recovery Check-ins",
-    desc: "Swipeable card questionnaires that feel natural. Patients complete them in under 60 seconds.",
+    title: "Daily Check-ins",
+    desc: "Quick health questions you can answer in under a minute. Simple as swiping.",
     color: "#34D399"
   },
   {
     icon: Stethoscope,
-    title: "Real-Time Clinical Oversight",
-    desc: "Doctors monitor every patient's recovery trajectory with risk alerts and trend analytics.",
+    title: "Doctor Dashboard",
+    desc: "Doctors see your progress, flag concerns, and stay in the loop.",
     color: "#818CF8"
   },
   {
     icon: BarChart3,
-    title: "Recovery Intelligence",
-    desc: "GitHub-style heatmaps, activity rings, and compliance scores surface the signal in the noise.",
+    title: "Your Health History",
+    desc: "See your recovery over time with simple charts. No confusion.",
     color: "#60A5FA"
   },
   {
     icon: Bell,
-    title: "Smart Reminders",
-    desc: "Medication schedules, check-in prompts, and escalation alerts — automated and intelligent.",
+    title: "Reminders",
+    desc: "Get notified about meds, check-ins, and follow-ups when you need them.",
     color: "#FBBF24"
   },
   {
     icon: Lock,
-    title: "HIPAA Compliant",
-    desc: "256-bit encryption, Aadhaar-backed identity, and complete audit trails built in from day one.",
+    title: "Secure & Private",
+    desc: "Your data is encrypted and only shared with your care team.",
     color: "#A1A1AA"
   },
   {
     icon: Zap,
-    title: "Instant Sync",
-    desc: "EHR-connected. Patient data syncs across care teams the moment it's submitted.",
+    title: "Always Up-to-Date",
+    desc: "Your doctors have the latest info. Real-time syncing, no delays.",
     color: "#34D399"
   }
 ];
 
 const trustBadges = [
-  "256-bit encrypted",
-  "UIDAI Aadhaar verified",
-  "Hospital EHR synced",
-  "NABH compliant"
+  "Encrypted",
+  "Verified",
+  "Connected to hospitals",
+  "HIPAA compliant"
 ];
 
 export default function Home() {

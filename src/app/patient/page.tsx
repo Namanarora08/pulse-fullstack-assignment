@@ -129,7 +129,7 @@ export default function PatientPage() {
     <RoleShell
       role="patient"
       title={`Welcome back, ${firstName}`}
-      description="Your post-discharge recovery overview."
+      description="Your recovery progress."
       navItems={patientNavItems}
     >
       <div className="mx-auto max-w-6xl space-y-6">
@@ -163,8 +163,8 @@ export default function PatientPage() {
                 transition={{ delay: 0.3 }}
                 className="bg-recovery/8 inline-flex items-center gap-1.5 rounded-full border border-recovery/20 px-3 py-1 text-xs font-medium text-recovery"
               >
-                <Sparkles className="h-3 w-3" />
-                Optimal recovery zone
+                <CheckCircle2 className="h-3 w-3" />
+                Looking good
               </motion.div>
 
               <div>
@@ -175,8 +175,7 @@ export default function PatientPage() {
                   </span>
                 </h2>
                 <p className="mt-2 max-w-xs text-sm leading-relaxed text-text-secondary">
-                  Vital trends, symptom logs, and medication adherence are above
-                  clinical post-discharge targets.
+                  You're on track. Keep up with your meds and check-ins.
                 </p>
               </div>
 

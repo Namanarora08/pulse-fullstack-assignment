@@ -33,8 +33,8 @@ export default function AdminRolesPage() {
   return (
     <RoleShell
       role="admin"
-      title="Role & Access Control Governance"
-      description="Define granular platform access permissions across Patient, Doctor, and Administrator system roles."
+      title="Roles & Permissions"
+      description="Control access levels for patients, doctors, and admins."
       navItems={adminNavItems}
     >
       <div className="space-y-6">
@@ -42,10 +42,10 @@ export default function AdminRolesPage() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              System Roles & Access Rules ({roles.length} Roles)
+              Roles ({roles.length})
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Role-based access control (RBAC) rules enforced across API routes and portal views.
+              Set permissions for each role.
             </p>
           </div>
 

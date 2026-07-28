@@ -7,8 +7,8 @@ export default function DoctorReportsPage() {
   return (
     <RoleShell
       role="doctor"
-      title="Clinical Reports"
-      description="View and generate detailed patient recovery reports and clinical summaries."
+      title="Reports"
+      description="View patient reports and summaries."
       navItems={doctorNavItems}
     >
       <div className="space-y-6">

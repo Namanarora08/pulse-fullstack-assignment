@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { AuthSession, FullSession, SESSION_COOKIE_NAME } from "./auth";
+import { sessionStore } from "./session-store";
 
 // Server helper to parse minimal session from cookies
 export async function getServerSession(): Promise<AuthSession | null> {
@@ -19,8 +20,7 @@ export async function getFullSession(
 ): Promise<FullSession | null> {
   try {
     // In production, this would fetch from database using sessionId
-    // For demo, we'll import the session store from login route
-    const { sessionStore } = await import("@/app/api/auth/login/route");
+    // For demo, we use the in-memory session store
     return sessionStore.get(sessionId) || null;
   } catch {
     return null;

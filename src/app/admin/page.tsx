@@ -91,8 +91,8 @@ export default function AdminDashboardPage() {
   return (
     <RoleShell
       role="admin"
-      title="Hospital System Administration"
-      description="Live hospital governance metrics, patient lifecycles, physician rosters, and system audit logs."
+      title="Hospital Admin"
+      description="Manage patients, doctors, reports, and system access."
       navItems={adminNavItems}
     >
       <div className="space-y-6">

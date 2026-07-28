@@ -189,8 +189,8 @@ export default function AdminTemplatesPage() {
   return (
     <RoleShell
       role="admin"
-      title="Question Template & Disease Protocol Management"
-      description="Create, configure, and assign disease-specific daily recovery questionnaires across Diabetes, Hypertension, Heart Disease, Asthma, Kidney Disease, Cancer Recovery, and Post-Surgical cohorts."
+      title="Question Templates"
+      description="Create check-in questionnaires for different conditions."
       navItems={adminNavItems}
     >
       <div className="space-y-6">
@@ -198,10 +198,10 @@ export default function AdminTemplatesPage() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              Disease Questionnaires & Protocols ({filteredTemplates.length})
+              Templates ({filteredTemplates.length})
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Configure daily symptom and adherence check-in templates across medical specialties.
+              Build daily check-in questions for your conditions.
             </p>
           </div>
 
@@ -209,7 +209,7 @@ export default function AdminTemplatesPage() {
             onClick={openCreateModal}
             className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white gap-2 text-xs shrink-0"
           >
-            <Plus className="h-4 w-4" /> Create Disease Template
+            <Plus className="h-4 w-4" /> Add Template
           </Button>
         </div>
 

@@ -173,8 +173,8 @@ export default function AdminDoctorsPage() {
   return (
     <RoleShell
       role="admin"
-      title="Doctor Specialist Management"
-      description="Manage hospital attending physicians, specialties, department allocations, and patient roster assignments."
+      title="Doctors"
+      description="Add, edit, and manage doctors. Assign them to patients."
       navItems={adminNavItems}
     >
       <div className="space-y-6">
@@ -182,10 +182,10 @@ export default function AdminDoctorsPage() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              Medical Specialists Registry ({filteredDoctors.length})
+              Doctors ({filteredDoctors.length})
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Manage clinical team members, departments, and active patient loads.
+              Manage your doctors and their patients.
             </p>
           </div>
 
@@ -193,7 +193,7 @@ export default function AdminDoctorsPage() {
             onClick={openCreateModal}
             className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white gap-2 text-xs shrink-0"
           >
-            <Plus className="h-4 w-4" /> Add Doctor Specialist
+            <Plus className="h-4 w-4" /> Add Doctor
           </Button>
         </div>
 

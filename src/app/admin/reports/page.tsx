@@ -140,8 +140,8 @@ export default function AdminClinicalUploadsPage() {
   return (
     <RoleShell
       role="admin"
-      title="Clinical Document Uploads & Repository"
-      description="Centralized hospital repository for uploading, verifying, and managing patient blood work, scan reports, discharge summaries, and prescriptions."
+      title="Reports"
+      description="Upload and manage patient medical documents."
       navItems={adminNavItems}
     >
       <div className="space-y-6">
@@ -149,10 +149,10 @@ export default function AdminClinicalUploadsPage() {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              Clinical Documents Repository ({filteredReports.length})
+              Documents ({filteredReports.length})
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Upload blood reports, imaging scans, discharge notes, and link them directly to patient records.
+              Lab results, scans, discharge notes, and prescriptions.
             </p>
           </div>
 
@@ -160,7 +160,7 @@ export default function AdminClinicalUploadsPage() {
             onClick={openUploadModal}
             className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white gap-2 text-xs shrink-0"
           >
-            <Upload className="h-4 w-4" /> Upload Clinical Document
+            <Upload className="h-4 w-4" /> Upload Document
           </Button>
         </div>
 
